@@ -1,0 +1,5 @@
+{
+  "TORONET_NETWORK": "testnet",
+  "TORONET_ADMIN_ADDRESS": "0x03c8ef05663bd8e4ad8074d650e4ccd33310cd95",
+  "TORONET_ADMIN_PASSWORD": "adminpwd"
+}
