@@ -10,7 +10,17 @@ abstract class Failure extends Equatable {
 }
 
 class ServerFailure extends Failure {
-  const ServerFailure(super.message);
+  final int? statusCode;
+
+  const ServerFailure(super.message, {this.statusCode});
+
+  @override
+  String get message => statusCode != null
+      ? 'Server error ($statusCode): ${super.message}'
+      : 'Server error: ${super.message}';
+
+  @override
+  List<Object?> get props => [message, statusCode];
 }
 
 class CacheFailure extends Failure {

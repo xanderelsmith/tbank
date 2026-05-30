@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import '../../domain/entities/bank_entity.dart';
 import '../../domain/repositories/payment_repository.dart';
@@ -27,8 +28,10 @@ class PaymentController extends ChangeNotifier {
   bool get isVerifyingAccount => _isVerifyingAccount;
   String? get depositReference => _depositReference;
   bool get depositSuccess => _depositSuccess;
+  bool get isTestnet => _repository.isTestnet;
 
   Future<void> fetchBanks(String currency) async {
+    developer.log('fetchBanks: currency=$currency', name: 'PaymentController');
     _isLoadingBanks = true;
     _errorMessage = null;
     _banks = [];
@@ -36,7 +39,9 @@ class PaymentController extends ChangeNotifier {
 
     try {
       _banks = await _repository.getBanks(currency: currency);
+      developer.log('fetchBanks success: loaded ${_banks.length} banks', name: 'PaymentController');
     } catch (e) {
+      developer.log('fetchBanks error: $e', name: 'PaymentController', error: e);
       _errorMessage = 'Failed to load bank list: ${e.toString()}';
     } finally {
       _isLoadingBanks = false;
@@ -48,6 +53,7 @@ class PaymentController extends ChangeNotifier {
     required String bankCode,
     required String accountNumber,
   }) async {
+    developer.log('verifyAccount: bankCode=$bankCode, accountNumber=$accountNumber', name: 'PaymentController');
     _isVerifyingAccount = true;
     _errorMessage = null;
     _verifiedAccountName = null;
@@ -59,8 +65,10 @@ class PaymentController extends ChangeNotifier {
         accountNumber: accountNumber,
       );
       _verifiedAccountName = name;
+      developer.log('verifyAccount success: name=$name', name: 'PaymentController');
       return name;
     } catch (e) {
+      developer.log('verifyAccount error: $e', name: 'PaymentController', error: e);
       _errorMessage = e.toString();
       return null;
     } finally {
@@ -74,6 +82,7 @@ class PaymentController extends ChangeNotifier {
     required String currency,
     required String address,
   }) async {
+    developer.log('initiateDeposit: amount=$amount, currency=$currency, address=$address', name: 'PaymentController');
     _isLoading = true;
     _errorMessage = null;
     _depositReference = null;
@@ -88,8 +97,10 @@ class PaymentController extends ChangeNotifier {
       );
       _depositReference = ref;
       _depositSuccess = true;
+      developer.log('initiateDeposit success: reference=$ref', name: 'PaymentController');
       return true;
     } catch (e) {
+      developer.log('initiateDeposit error: $e', name: 'PaymentController', error: e);
       _errorMessage = e.toString();
       return false;
     } finally {
@@ -102,6 +113,7 @@ class PaymentController extends ChangeNotifier {
     required String paymentId,
     required String amount,
   }) async {
+    developer.log('confirmDeposit: paymentId=$paymentId, amount=$amount', name: 'PaymentController');
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -111,8 +123,10 @@ class PaymentController extends ChangeNotifier {
         paymentId: paymentId,
         amount: amount,
       );
+      developer.log('confirmDeposit success: verified=$verified', name: 'PaymentController');
       return verified;
     } catch (e) {
+      developer.log('confirmDeposit error: $e', name: 'PaymentController', error: e);
       _errorMessage = e.toString();
       return false;
     } finally {
@@ -130,6 +144,10 @@ class PaymentController extends ChangeNotifier {
     required String accountName,
     required String password,
   }) async {
+    developer.log(
+      'executeWithdrawal: address=$address, amount=$amount, currency=$currency, bankCode=$bankCode, accountNumber=$accountNumber, accountName=$accountName',
+      name: 'PaymentController',
+    );
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -144,8 +162,10 @@ class PaymentController extends ChangeNotifier {
         accountName: accountName,
         password: password,
       );
+      developer.log('executeWithdrawal success: txHash=$txHash', name: 'PaymentController');
       return txHash;
     } catch (e) {
+      developer.log('executeWithdrawal error: $e', name: 'PaymentController', error: e);
       _errorMessage = e.toString();
       return null;
     } finally {
@@ -155,6 +175,7 @@ class PaymentController extends ChangeNotifier {
   }
 
   void clearState() {
+    developer.log('clearState', name: 'PaymentController');
     _errorMessage = null;
     _depositReference = null;
     _depositSuccess = false;

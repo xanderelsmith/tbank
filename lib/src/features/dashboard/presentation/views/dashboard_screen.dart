@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/widgets/glass_container.dart';
+import '../../../../core/widgets/in_app_notification.dart';
 import '../../../onboarding/presentation/controllers/onboarding_controller.dart';
 import '../controllers/dashboard_controller.dart';
 
@@ -17,12 +18,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    final dashboard = context.read<DashboardController>();
+    dashboard.addListener(_onDashboardErrorListener);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final activeWallet = context.read<OnboardingController>().activeWallet;
       if (activeWallet != null) {
-        context.read<DashboardController>().fetchBalances(activeWallet.address);
+        dashboard.fetchBalances(activeWallet.address);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    context.read<DashboardController>().removeListener(
+      _onDashboardErrorListener,
+    );
+    super.dispose();
+  }
+
+  void _onDashboardErrorListener() {
+    if (!mounted) return;
+    final dashboard = context.read<DashboardController>();
+    final error = dashboard.errorMessage;
+    if (error != null) {
+      dashboard.clearError();
+      InAppNotification.show(context, error, isError: true);
+    }
   }
 
   @override
@@ -31,7 +53,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final dashboard = context.watch<DashboardController>();
     final wallet = onboarding.activeWallet;
 
-    if (wallet == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (wallet == null)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -74,7 +97,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 color: AppColors.primary.withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+                              child: const Icon(
+                                Icons.person_outline,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
                             ),
                             const SizedBox(width: 10),
                             Text(
@@ -88,15 +115,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.success.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.success.withOpacity(0.2)),
+                            border: Border.all(
+                              color: AppColors.success.withOpacity(0.2),
+                            ),
                           ),
                           child: const Text(
                             'Active',
-                            style: TextStyle(color: AppColors.success, fontSize: 12, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: AppColors.success,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -104,7 +140,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 20),
                     const Text(
                       'Wallet Address',
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Row(
@@ -124,7 +163,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(width: 8),
                         GestureDetector(
                           onTap: () {
-                            Clipboard.setData(ClipboardData(text: wallet.address));
+                            Clipboard.setData(
+                              ClipboardData(text: wallet.address),
+                            );
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('Address copied to clipboard'),
@@ -139,7 +180,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               color: Colors.white.withOpacity(0.05),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Icon(Icons.copy, color: AppColors.textSecondary, size: 16),
+                            child: const Icon(
+                              Icons.copy,
+                              color: AppColors.textSecondary,
+                              size: 16,
+                            ),
                           ),
                         ),
                       ],
@@ -152,25 +197,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Balances Section
               const Text(
                 'Asset Balances',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
               const SizedBox(height: 12),
-              
+
               if (dashboard.isLoading)
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 40.0),
-                  child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-                )
-              else if (dashboard.errorMessage != null)
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Failed to load balances: ${dashboard.errorMessage}',
-                    style: const TextStyle(color: AppColors.error),
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                 )
               else
@@ -189,7 +229,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isToroG ? AppColors.secondary.withOpacity(0.2) : AppColors.primary.withOpacity(0.15),
+                          color: isToroG
+                              ? AppColors.secondary.withOpacity(0.2)
+                              : AppColors.primary.withOpacity(0.15),
                         ),
                       ),
                       child: Row(
@@ -201,12 +243,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 width: 44,
                                 height: 44,
                                 decoration: BoxDecoration(
-                                  color: (isToroG ? AppColors.secondary : AppColors.primary).withOpacity(0.1),
+                                  color:
+                                      (isToroG
+                                              ? AppColors.secondary
+                                              : AppColors.primary)
+                                          .withOpacity(0.1),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
-                                  isToroG ? Icons.local_fire_department : Icons.monetization_on,
-                                  color: isToroG ? AppColors.secondary : AppColors.primary,
+                                  isToroG
+                                      ? Icons.local_fire_department
+                                      : Icons.monetization_on,
+                                  color: isToroG
+                                      ? AppColors.secondary
+                                      : AppColors.primary,
                                   size: 24,
                                 ),
                               ),
@@ -216,12 +266,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 children: [
                                   Text(
                                     balance.name,
-                                    style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                                    style: const TextStyle(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     balance.symbol,
-                                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -230,7 +287,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           Text(
                             balance.amount,
                             style: TextStyle(
-                              color: isToroG ? AppColors.secondary : AppColors.textPrimary,
+                              color: isToroG
+                                  ? AppColors.secondary
+                                  : AppColors.textPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                               fontFamily: 'monospace',
@@ -246,17 +305,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
               // Action Cards / Grid
               const Text(
                 'Financial Services',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
               const SizedBox(height: 12),
-              
+
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 1.45,
+                childAspectRatio: 1.19,
                 children: [
                   _buildActionCard(
                     context,
@@ -309,7 +373,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // View History Button
               OutlinedButton.icon(
                 icon: const Icon(Icons.history, size: 20),
@@ -364,12 +428,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 10),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 10,
+                  ),
                 ),
               ],
             ),

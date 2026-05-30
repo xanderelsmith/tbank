@@ -1,4 +1,6 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:tbank/src/core/constants/constants.dart';
 import 'package:tbank/src/core/widgets/custom_text_field.dart';
 import 'package:tbank/src/core/widgets/gradient_button.dart';
 import 'package:tbank/src/features/onboarding/presentation/controllers/onboarding_controller.dart';
@@ -40,6 +42,37 @@ class ImportWalletTab extends StatelessWidget {
               }
               return null;
             },
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: Text(
+                  'Need a test key? Click to generate a random EVM-compatible private key.',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 11, height: 1.3),
+                ),
+              ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: () {
+                  final random = Random.secure();
+                  final values = List<int>.generate(32, (i) => random.nextInt(256));
+                  final hexString = '0x${values.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join()}';
+                  _importKeyController.text = hexString;
+                },
+                icon: const Icon(Icons.auto_awesome, size: 14, color: AppColors.primary),
+                label: const Text(
+                  'Generate Test Key',
+                  style: TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           CustomTextField(

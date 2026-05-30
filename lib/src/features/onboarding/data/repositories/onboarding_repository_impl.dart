@@ -22,26 +22,28 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     required String username,
     required String password,
   }) async {
-    log(username.toString());
+    log('createWallet request started for username: $username');
     try {
       final wallet = await _client.wallet.createWallet(
         username: username,
         password: password,
       );
-      log(wallet.toString());
-      // Attempt to retrieve or set private key/seed details if supported.
-      // In the SDK, the wallet object contains public properties like address and tnsName.
+      log('createWallet request succeeded: address=${wallet.address}, username=${wallet.tnsName}');
       return WalletEntity(
         address: wallet.address,
         username: wallet.tnsName ?? username,
       );
     } on ValidationException catch (e) {
+      log('createWallet ValidationException: ${e.message}', error: e);
       throw ValidationFailure(e.message);
     } on APIException catch (e) {
+      log('createWallet APIException: ${e.message}', error: e);
       throw ServerFailure(e.message);
     } on ToroSDKException catch (e) {
+      log('createWallet ToroSDKException: ${e.message}', error: e);
       throw ServerFailure(e.message);
     } catch (e) {
+      log('createWallet unexpected error: $e', error: e);
       throw ServerFailure('An unexpected error occurred: $e');
     }
   }
@@ -52,17 +54,13 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     required String username,
     required String password,
   }) async {
+    log('importWallet request started for username: $username');
     try {
-      // In the SDK: sdk.walletService.importWalletFromPrivateKey(privateKey: ..., password: ...)
-      // Let's verify parameter names from our example code in step 64 content.md.
-      // Wait, let's check step 64 lines for importWallet:
-      // "importWallet requires a private key.\nUse: sdk.walletService.importWalletFromPrivateKey(...)"
-      // Let's check how importWalletFromPrivateKey is defined.
-      // Let's call importWalletFromPrivateKey(privateKey: privateKey, password: password) or username as well.
       final wallet = await _client.wallet.importWalletFromPrivateKey(
         privateKey: privateKey,
         password: password,
       );
+      log('importWallet request succeeded: address=${wallet.address}');
 
       return WalletEntity(
         address: wallet.address,
@@ -70,12 +68,16 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
         privateKey: privateKey,
       );
     } on ValidationException catch (e) {
+      log('importWallet ValidationException: ${e.message}', error: e);
       throw ValidationFailure(e.message);
     } on APIException catch (e) {
+      log('importWallet APIException: ${e.message}', error: e);
       throw ServerFailure(e.message);
     } on ToroSDKException catch (e) {
+      log('importWallet ToroSDKException: ${e.message}', error: e);
       throw ServerFailure(e.message);
     } catch (e) {
+      log('importWallet unexpected error: $e', error: e);
       throw ServerFailure('An unexpected error occurred: $e');
     }
   }
@@ -85,12 +87,16 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     required String address,
     required String password,
   }) async {
+    log('verifyPassword request started for address: $address');
     try {
-      return await _client.wallet.verifyWalletPassword(
+      final result = await _client.wallet.verifyWalletPassword(
         address: address,
         password: password,
       );
+      log('verifyPassword request succeeded: result=$result');
+      return result;
     } catch (e) {
+      log('verifyPassword failed for address $address: $e', error: e);
       throw ServerFailure('Password verification failed: $e');
     }
   }
@@ -101,24 +107,32 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     required String oldPassword,
     required String newPassword,
   }) async {
+    log('updatePassword request started for address: $address');
     try {
       await _client.wallet.updateWalletPassword(
         address: address,
         oldPassword: oldPassword,
         newPassword: newPassword,
       );
+      log('updatePassword request succeeded for address: $address');
     } on ValidationException catch (e) {
+      log('updatePassword ValidationException: ${e.message}', error: e);
       throw ValidationFailure(e.message);
     } catch (e) {
+      log('updatePassword failed: $e', error: e);
       throw ServerFailure('Update password failed: $e');
     }
   }
 
   @override
   Future<bool> isTNSAvailable({required String username}) async {
+    log('isTNSAvailable request started for username: $username');
     try {
-      return await _client.wallet.isTNSAvailable(username: username);
+      final result = await _client.wallet.isTNSAvailable(username: username);
+      log('isTNSAvailable request succeeded: result=$result');
+      return result;
     } catch (e) {
+      log('isTNSAvailable failed: $e', error: e);
       throw ServerFailure('Failed checking username availability: $e');
     }
   }

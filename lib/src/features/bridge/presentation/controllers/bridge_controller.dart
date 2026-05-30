@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import '../../domain/repositories/bridge_repository.dart';
 
@@ -27,11 +28,13 @@ class BridgeController extends ChangeNotifier {
   bool get isLoadingBalance => _isLoadingBalance;
 
   void selectSourceChain(String chain) {
+    developer.log('selectSourceChain: $chain', name: 'BridgeController');
     _selectedChain = chain;
     notifyListeners();
   }
 
   Future<void> fetchSourceBalance(String address) async {
+    developer.log('fetchSourceBalance: address=$address, chain=$_selectedChain', name: 'BridgeController');
     _isLoadingBalance = true;
     _errorMessage = null;
     notifyListeners();
@@ -41,7 +44,9 @@ class BridgeController extends ChangeNotifier {
         address: address,
         chain: _selectedChain,
       );
+      developer.log('fetchSourceBalance success: balance=$_sourceBalance', name: 'BridgeController');
     } catch (e) {
+      developer.log('fetchSourceBalance error: $e', name: 'BridgeController', error: e);
       _sourceBalance = '0.00';
       _errorMessage = e.toString();
     } finally {
@@ -54,6 +59,7 @@ class BridgeController extends ChangeNotifier {
     required String contractAddress,
     required String amount,
   }) async {
+    developer.log('estimateFee: contractAddress=$contractAddress, amount=$amount, chain=$_selectedChain', name: 'BridgeController');
     _isEstimatingFee = true;
     _errorMessage = null;
     notifyListeners();
@@ -64,7 +70,9 @@ class BridgeController extends ChangeNotifier {
         amount: amount,
         chain: _selectedChain,
       );
+      developer.log('estimateFee success: fee=$_estimatedFee', name: 'BridgeController');
     } catch (e) {
+      developer.log('estimateFee error: $e', name: 'BridgeController', error: e);
       _estimatedFee = '0.50';
     } finally {
       _isEstimatingFee = false;
@@ -79,6 +87,10 @@ class BridgeController extends ChangeNotifier {
     required String amount,
     required String contractAddress,
   }) async {
+    developer.log(
+      'executeBridge: fromAddress=$fromAddress, tokenName=$tokenName, amount=$amount, contractAddress=$contractAddress, sourceChain=$_selectedChain',
+      name: 'BridgeController',
+    );
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -92,8 +104,10 @@ class BridgeController extends ChangeNotifier {
         amount: amount,
         contractAddress: contractAddress,
       );
+      developer.log('executeBridge success: txHash=$result', name: 'BridgeController');
       return result;
     } catch (e) {
+      developer.log('executeBridge error: $e', name: 'BridgeController', error: e);
       _errorMessage = e.toString();
       return null;
     } finally {
@@ -103,6 +117,7 @@ class BridgeController extends ChangeNotifier {
   }
 
   void clearState() {
+    developer.log('clearState', name: 'BridgeController');
     _errorMessage = null;
     _isLoading = false;
     _isLoadingBalance = false;

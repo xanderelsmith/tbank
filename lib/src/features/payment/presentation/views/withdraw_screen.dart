@@ -4,6 +4,8 @@ import '../../../../core/constants/constants.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
+import '../../../../core/widgets/in_app_notification.dart';
 import '../../../onboarding/presentation/controllers/onboarding_controller.dart';
 import '../controllers/payment_controller.dart';
 import '../../domain/entities/bank_entity.dart';
@@ -220,6 +222,12 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                                         _accountVerified = true;
                                         _resolvedAccountName = name;
                                       });
+                                    } else if (mounted && controller.errorMessage != null) {
+                                      InAppNotification.show(
+                                        context,
+                                        controller.errorMessage!,
+                                        isError: true,
+                                      );
                                     }
                                   },
                             child: controller.isVerifyingAccount
@@ -290,22 +298,6 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    if (controller.errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          controller.errorMessage!,
-                          style: const TextStyle(color: AppColors.error, fontSize: 13),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-
                     GradientButton(
                       text: 'Execute Withdrawal',
                       isLoading: controller.isLoading,
@@ -324,6 +316,9 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                                 );
 
                                 if (txHash != null && mounted) {
+                                  final dashboardController = context.read<DashboardController>();
+                                  final address = activeWallet.address;
+
                                   controller.clearState();
                                   _amountController.clear();
                                   _accountNumberController.clear();
@@ -335,6 +330,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
 
                                   showDialog(
                                     context: context,
+                                    barrierDismissible: false,
                                     builder: (context) => AlertDialog(
                                       backgroundColor: AppColors.surface,
                                       title: const Row(
@@ -361,6 +357,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                                       actions: [
                                         TextButton(
                                           onPressed: () {
+                                            dashboardController.fetchBalances(address);
                                             Navigator.pop(context);
                                             Navigator.pop(context);
                                           },
@@ -368,6 +365,12 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                                         ),
                                       ],
                                     ),
+                                  );
+                                } else if (mounted && controller.errorMessage != null) {
+                                  InAppNotification.show(
+                                    context,
+                                    controller.errorMessage!,
+                                    isError: true,
                                   );
                                 }
                               }

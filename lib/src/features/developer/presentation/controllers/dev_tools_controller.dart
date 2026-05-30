@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import '../../domain/repositories/dev_tools_repository.dart';
 
@@ -22,6 +23,7 @@ class DevToolsController extends ChangeNotifier {
   bool get isAnalyzingRevert => _isAnalyzingRevert;
 
   Future<void> fetchDiagnostics() async {
+    developer.log('fetchDiagnostics', name: 'DevToolsController');
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -33,7 +35,9 @@ class DevToolsController extends ChangeNotifier {
       ]);
       _blockchainStatus = results[0];
       _latestBlock = results[1];
+      developer.log('fetchDiagnostics success', name: 'DevToolsController');
     } catch (e) {
+      developer.log('fetchDiagnostics error: $e', name: 'DevToolsController', error: e);
       _errorMessage = e.toString();
     } finally {
       _isLoading = false;
@@ -44,6 +48,7 @@ class DevToolsController extends ChangeNotifier {
   Future<String?> analyzeRevertReason(String txHash) async {
     if (txHash.trim().isEmpty) return null;
     
+    developer.log('analyzeRevertReason: txHash=$txHash', name: 'DevToolsController');
     _isAnalyzingRevert = true;
     _revertReason = null;
     _errorMessage = null;
@@ -52,8 +57,10 @@ class DevToolsController extends ChangeNotifier {
     try {
       final reason = await _repository.getTransactionRevertReason(txHash: txHash);
       _revertReason = reason;
+      developer.log('analyzeRevertReason success: reason=$reason', name: 'DevToolsController');
       return reason;
     } catch (e) {
+      developer.log('analyzeRevertReason error: $e', name: 'DevToolsController', error: e);
       _errorMessage = e.toString();
       return null;
     } finally {
@@ -63,6 +70,7 @@ class DevToolsController extends ChangeNotifier {
   }
 
   void clearState() {
+    developer.log('clearState', name: 'DevToolsController');
     _blockchainStatus = null;
     _latestBlock = null;
     _revertReason = null;

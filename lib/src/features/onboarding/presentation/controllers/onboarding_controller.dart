@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:tbank/src/features/onboarding/data/repositories/onboarding_repository_impl.dart';
 import '../../domain/entities/wallet_entity.dart';
@@ -11,6 +12,7 @@ class OnboardingController extends ChangeNotifier {
   bool? _isTnsAvailable;
 
   OnboardingController(this._repository) {
+    developer.log('Initializing OnboardingController...', name: 'OnboardingController');
     _loadSavedWallet();
   }
 
@@ -21,10 +23,13 @@ class OnboardingController extends ChangeNotifier {
   bool? get isTnsAvailable => _isTnsAvailable;
 
   Future<void> _loadSavedWallet() async {
+    developer.log('Loading saved wallet...', name: 'OnboardingController');
     _setLoading(true);
     try {
       _activeWallet = await _repository.getSavedWallet();
+      developer.log('Loaded saved wallet: activeWallet=${_activeWallet?.address}', name: 'OnboardingController');
     } catch (e) {
+      developer.log('Error loading saved wallet: $e', name: 'OnboardingController', error: e);
       _errorMessage = e.toString();
     } finally {
       _setLoading(false);
@@ -37,9 +42,12 @@ class OnboardingController extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    developer.log('Checking TNS availability for: $username', name: 'OnboardingController');
     try {
       _isTnsAvailable = await _repository.isTNSAvailable(username: username);
-    } catch (_) {
+      developer.log('TNS availability result for $username: $_isTnsAvailable', name: 'OnboardingController');
+    } catch (e) {
+      developer.log('TNS check error: $e', name: 'OnboardingController', error: e);
       _isTnsAvailable = false;
     }
     notifyListeners();
@@ -49,6 +57,7 @@ class OnboardingController extends ChangeNotifier {
     required String username,
     required String password,
   }) async {
+    developer.log('createWallet: username=$username', name: 'OnboardingController');
     _setLoading(true);
     _errorMessage = null;
     try {
@@ -66,9 +75,11 @@ class OnboardingController extends ChangeNotifier {
 
       await _repository.saveWallet(savedWallet);
       _activeWallet = savedWallet;
+      developer.log('createWallet success: address=${wallet.address}', name: 'OnboardingController');
       notifyListeners();
       return true;
     } catch (e) {
+      developer.log('createWallet error: $e', name: 'OnboardingController', error: e);
       _errorMessage = e.toString();
       return false;
     } finally {
@@ -81,6 +92,7 @@ class OnboardingController extends ChangeNotifier {
     required String username,
     required String password,
   }) async {
+    developer.log('importWallet: username=$username', name: 'OnboardingController');
     _setLoading(true);
     _errorMessage = null;
     try {
@@ -92,9 +104,11 @@ class OnboardingController extends ChangeNotifier {
 
       await _repository.saveWallet(wallet);
       _activeWallet = wallet;
+      developer.log('importWallet success: address=${wallet.address}', name: 'OnboardingController');
       notifyListeners();
       return true;
     } catch (e) {
+      developer.log('importWallet error: $e', name: 'OnboardingController', error: e);
       _errorMessage = e.toString();
       return false;
     } finally {
@@ -103,13 +117,16 @@ class OnboardingController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    developer.log('logout active wallet: ${_activeWallet?.address}', name: 'OnboardingController');
     _setLoading(true);
     try {
       await _repository.deleteWallet();
       _activeWallet = null;
       _isTnsAvailable = null;
       _errorMessage = null;
+      developer.log('logout success', name: 'OnboardingController');
     } catch (e) {
+      developer.log('logout error: $e', name: 'OnboardingController', error: e);
       _errorMessage = e.toString();
     } finally {
       _setLoading(false);
@@ -122,6 +139,7 @@ class OnboardingController extends ChangeNotifier {
   }
 
   void clearError() {
+    developer.log('clearError', name: 'OnboardingController');
     _errorMessage = null;
     notifyListeners();
   }

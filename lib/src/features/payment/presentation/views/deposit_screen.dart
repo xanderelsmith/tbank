@@ -4,6 +4,8 @@ import '../../../../core/constants/constants.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/in_app_notification.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../onboarding/presentation/controllers/onboarding_controller.dart';
 import '../controllers/payment_controller.dart';
 
@@ -89,7 +91,7 @@ class _DepositScreenState extends State<DepositScreen> {
                                 isExpanded: true,
                                 icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary),
                                 style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                                items: ['NGN', 'USD'].map((curr) {
+                                items: ['NGN', 'USD', 'ToroG'].map((curr) {
                                   return DropdownMenuItem(
                                     value: curr,
                                     child: Text(curr),
@@ -129,22 +131,6 @@ class _DepositScreenState extends State<DepositScreen> {
                       ),
                       const SizedBox(height: 30),
 
-                      if (controller.errorMessage != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                          ),
-                          child: Text(
-                            controller.errorMessage!,
-                            style: const TextStyle(color: AppColors.error, fontSize: 13),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-
                       GradientButton(
                         text: 'Initiate Transfer',
                         isLoading: controller.isLoading,
@@ -156,10 +142,52 @@ class _DepositScreenState extends State<DepositScreen> {
                               address: activeWallet.address,
                             );
                             if (success) {
-                              setState(() {
-                                _stepInitiated = true;
-                                _paymentRef = controller.depositReference;
-                              });
+                              if (controller.isTestnet) {
+                                if (mounted) {
+                                  // Fetch balances immediately in the background so the dashboard is fresh
+                                  final dashboardController = context.read<DashboardController>();
+                                  dashboardController.fetchBalances(activeWallet.address);
+
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) => AlertDialog(
+                                      backgroundColor: AppColors.surface,
+                                      title: const Row(
+                                        children: [
+                                          Icon(Icons.check_circle_outline, color: AppColors.success),
+                                          SizedBox(width: 10),
+                                          Text('Deposit Confirmed'),
+                                        ],
+                                      ),
+                                      content: const Text(
+                                        'Your testnet stablecoin has been minted and credited instantly to your wallet address.',
+                                        style: TextStyle(color: AppColors.textSecondary),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context); // close dialog
+                                            Navigator.pop(context); // return to dashboard
+                                          },
+                                          child: const Text('Done', style: TextStyle(color: AppColors.primary)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              } else {
+                                setState(() {
+                                  _stepInitiated = true;
+                                  _paymentRef = controller.depositReference;
+                                });
+                              }
+                            } else if (mounted && controller.errorMessage != null) {
+                              InAppNotification.show(
+                                context,
+                                controller.errorMessage!,
+                                isError: true,
+                              );
                             }
                           }
                         },
@@ -192,22 +220,6 @@ class _DepositScreenState extends State<DepositScreen> {
                       ),
                       const SizedBox(height: 30),
 
-                      if (controller.errorMessage != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                          ),
-                          child: Text(
-                            controller.errorMessage!,
-                            style: const TextStyle(color: AppColors.error, fontSize: 13),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-
                       GradientButton(
                         text: 'Confirm Settle Deposit',
                         isLoading: controller.isLoading,
@@ -218,7 +230,10 @@ class _DepositScreenState extends State<DepositScreen> {
                               amount: _amountController.text,
                             );
 
-                            if (verified && mounted) {
+                             if (verified && mounted) {
+                              final dashboardController = context.read<DashboardController>();
+                              final address = activeWallet.address;
+
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
@@ -237,6 +252,7 @@ class _DepositScreenState extends State<DepositScreen> {
                                   actions: [
                                     TextButton(
                                       onPressed: () {
+                                        dashboardController.fetchBalances(address);
                                         Navigator.pop(context); // close dialog
                                         Navigator.pop(context); // return to dashboard
                                       },
@@ -245,12 +261,12 @@ class _DepositScreenState extends State<DepositScreen> {
                                   ],
                                 ),
                               );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Payment verification failed or pending.'),
-                                  backgroundColor: AppColors.error,
-                                ),
+                            } else if (mounted) {
+                              final err = controller.errorMessage ?? 'Payment verification failed or pending.';
+                              InAppNotification.show(
+                                context,
+                                err,
+                                isError: true,
                               );
                             }
                           }

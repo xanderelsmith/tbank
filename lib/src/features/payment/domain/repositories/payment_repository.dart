@@ -1,6 +1,8 @@
 import '../entities/bank_entity.dart';
 
 abstract class PaymentRepository {
+  bool get isTestnet;
+
   Future<String> initiateDeposit({
     required String amount,
     required String currency,

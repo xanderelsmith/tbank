@@ -14,7 +14,7 @@ class DevToolsRepositoryImpl implements DevToolsRepository {
     try {
       return await _client.blockchain.getBlockchainStatus();
     } on APIException catch (e) {
-      throw ServerFailure(e.message);
+      throw ServerFailure(e.message, statusCode: e.statusCode);
     } catch (e) {
       throw ServerFailure('Failed to get blockchain status: $e');
     }
@@ -25,7 +25,7 @@ class DevToolsRepositoryImpl implements DevToolsRepository {
     try {
       return await _client.blockchain.getLatestBlockData();
     } on APIException catch (e) {
-      throw ServerFailure(e.message);
+      throw ServerFailure(e.message, statusCode: e.statusCode);
     } catch (e) {
       throw ServerFailure('Failed to get latest block: $e');
     }

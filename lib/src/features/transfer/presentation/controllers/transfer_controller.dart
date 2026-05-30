@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import '../../domain/repositories/transfer_repository.dart';
 
@@ -24,6 +25,7 @@ class TransferController extends ChangeNotifier {
       return recipientInput;
     }
 
+    developer.log('resolveRecipient: recipientInput=$recipientInput', name: 'TransferController');
     _isResolvingTNS = true;
     _errorMessage = null;
     notifyListeners();
@@ -31,8 +33,10 @@ class TransferController extends ChangeNotifier {
     try {
       final addr = await _repository.resolveTNS(recipientInput);
       _resolvedAddress = addr;
+      developer.log('resolveRecipient success: resolvedAddress=$addr', name: 'TransferController');
       return addr;
     } catch (e) {
+      developer.log('resolveRecipient error: $e', name: 'TransferController', error: e);
       _errorMessage = 'TNS Resolution failed: ${e.toString()}';
       _resolvedAddress = null;
       return null;
@@ -49,6 +53,10 @@ class TransferController extends ChangeNotifier {
     required String currency,
     required String password,
   }) async {
+    developer.log(
+      'executeTransfer: fromAddress=$fromAddress, toAddress=$toAddress, amount=$amount, currency=$currency',
+      name: 'TransferController',
+    );
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -61,8 +69,10 @@ class TransferController extends ChangeNotifier {
         currency: currency,
         password: password,
       );
+      developer.log('executeTransfer success: txHash=$txHash', name: 'TransferController');
       return txHash;
     } catch (e) {
+      developer.log('executeTransfer error: $e', name: 'TransferController', error: e);
       _errorMessage = e.toString();
       return null;
     } finally {
@@ -72,6 +82,7 @@ class TransferController extends ChangeNotifier {
   }
 
   void clearState() {
+    developer.log('clearState', name: 'TransferController');
     _errorMessage = null;
     _resolvedAddress = null;
     _isLoading = false;

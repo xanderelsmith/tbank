@@ -4,6 +4,8 @@ import '../../../../core/constants/constants.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
+import '../../../../core/widgets/in_app_notification.dart';
 import '../../../onboarding/presentation/controllers/onboarding_controller.dart';
 import '../controllers/transfer_controller.dart';
 
@@ -160,22 +162,6 @@ class _TransferScreenState extends State<TransferScreen> {
                     ),
                     const SizedBox(height: 30),
 
-                    if (controller.errorMessage != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppColors.error.withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          controller.errorMessage!,
-                          style: const TextStyle(color: AppColors.error, fontSize: 13),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-
                     GradientButton(
                       text: 'Authorize Transfer',
                       isLoading: controller.isLoading || controller.isResolvingTNS,
@@ -183,7 +169,16 @@ class _TransferScreenState extends State<TransferScreen> {
                         if (_formKey.currentState!.validate()) {
                           // First resolve recipient address
                           final recipientAddress = await controller.resolveRecipient(_recipientController.text);
-                          if (recipientAddress == null) return;
+                          if (recipientAddress == null) {
+                            if (mounted && controller.errorMessage != null) {
+                              InAppNotification.show(
+                                context,
+                                controller.errorMessage!,
+                                isError: true,
+                              );
+                            }
+                            return;
+                          }
 
                           // Execute transfer
                           final txHash = await controller.executeTransfer(
@@ -195,6 +190,9 @@ class _TransferScreenState extends State<TransferScreen> {
                           );
 
                           if (txHash != null && mounted) {
+                            final dashboardController = context.read<DashboardController>();
+                            final address = activeWallet.address;
+
                             controller.clearState();
                             _recipientController.clear();
                             _amountController.clear();
@@ -202,6 +200,7 @@ class _TransferScreenState extends State<TransferScreen> {
                             
                             showDialog(
                               context: context,
+                              barrierDismissible: false,
                               builder: (context) => AlertDialog(
                                 backgroundColor: AppColors.surface,
                                 title: const Row(
@@ -227,11 +226,21 @@ class _TransferScreenState extends State<TransferScreen> {
                                 ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context),
+                                    onPressed: () {
+                                      dashboardController.fetchBalances(address);
+                                      Navigator.pop(context); // close dialog
+                                      Navigator.pop(context); // return to dashboard
+                                    },
                                     child: const Text('OK', style: TextStyle(color: AppColors.primary)),
                                   ),
                                 ],
                               ),
+                            );
+                          } else if (mounted && controller.errorMessage != null) {
+                            InAppNotification.show(
+                              context,
+                              controller.errorMessage!,
+                              isError: true,
                             );
                           }
                         }

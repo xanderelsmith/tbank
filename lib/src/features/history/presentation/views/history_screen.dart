@@ -22,7 +22,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final activeWallet = context.read<OnboardingController>().activeWallet;
       if (activeWallet != null) {
-        context.read<HistoryController>().fetchTransactions(activeWallet.address);
+        context.read<HistoryController>().fetchTransactions(
+          activeWallet.address,
+        );
       }
     });
   }
@@ -32,7 +34,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final activeWallet = context.watch<OnboardingController>().activeWallet;
     final controller = context.watch<HistoryController>();
 
-    if (activeWallet == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (activeWallet == null)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     // Filter transactions locally based on selected tab
     final filteredTxns = controller.transactions.where((tx) {
@@ -47,7 +50,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text('Transaction History'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            icon: const Icon(Icons.restart_alt, color: AppColors.primary),
             onPressed: () => controller.fetchTransactions(activeWallet.address),
           ),
         ],
@@ -68,7 +71,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   selectedColor: AppColors.primary.withOpacity(0.2),
                   backgroundColor: AppColors.surface,
                   labelStyle: TextStyle(
-                    color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -91,110 +96,158 @@ class _HistoryScreenState extends State<HistoryScreen> {
           // Main Transaction List
           Expanded(
             child: RefreshIndicator(
-              onRefresh: () => controller.fetchTransactions(activeWallet.address),
+              onRefresh: () =>
+                  controller.fetchTransactions(activeWallet.address),
               color: AppColors.primary,
               backgroundColor: AppColors.surface,
               child: controller.isLoading
-                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
                   : controller.errorMessage != null
-                      ? Center(
-                          child: Text(
-                            'Error: ${controller.errorMessage}',
-                            style: const TextStyle(color: AppColors.error),
+                  ? Center(
+                      child: Text(
+                        'Error: ${controller.errorMessage}',
+                        style: const TextStyle(color: AppColors.error),
+                      ),
+                    )
+                  : filteredTxns.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.history_toggle_off,
+                            color: AppColors.textMuted,
+                            size: 48,
                           ),
-                        )
-                      : filteredTxns.isEmpty
-                          ? Center(
-                              child: Column(
+                          const SizedBox(height: 12),
+                          Text(
+                            'No transactions found for $_typeFilter.',
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(24),
+                      itemCount: filteredTxns.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final tx = filteredTxns[index];
+                        final isSend = tx.type == 'send';
+
+                        return GlassContainer(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          child: Theme(
+                            data: Theme.of(
+                              context,
+                            ).copyWith(dividerColor: Colors.transparent),
+                            child: ExpansionTile(
+                              tilePadding: EdgeInsets.zero,
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color:
+                                      (isSend
+                                              ? AppColors.error
+                                              : AppColors.success)
+                                          .withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  isSend
+                                      ? Icons.arrow_outward
+                                      : Icons.call_received,
+                                  color: isSend
+                                      ? AppColors.error
+                                      : AppColors.success,
+                                  size: 18,
+                                ),
+                              ),
+                              title: Text(
+                                isSend
+                                    ? 'Sent to: ${_formatAddress(tx.toAddress)}'
+                                    : 'Received from: ${_formatAddress(tx.fromAddress)}',
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 4.0),
+                                child: Text(
+                                  _formatDate(tx.timestamp),
+                                  style: const TextStyle(
+                                    color: AppColors.textSecondary,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                              trailing: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Icon(Icons.history_toggle_off, color: AppColors.textMuted, size: 48),
-                                  const SizedBox(height: 12),
                                   Text(
-                                    'No transactions found for $_typeFilter.',
-                                    style: const TextStyle(color: AppColors.textSecondary),
+                                    '${isSend ? '-' : '+'}${tx.amount}',
+                                    style: TextStyle(
+                                      color: isSend
+                                          ? AppColors.error
+                                          : AppColors.success,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    tx.currency.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 10,
+                                    ),
                                   ),
                                 ],
                               ),
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.all(24),
-                              itemCount: filteredTxns.length,
-                              separatorBuilder: (_, __) => const SizedBox(height: 12),
-                              itemBuilder: (context, index) {
-                                final tx = filteredTxns[index];
-                                final isSend = tx.type == 'send';
-
-                                return GlassContainer(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                  child: Theme(
-                                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                                    child: ExpansionTile(
-                                      tilePadding: EdgeInsets.zero,
-                                      leading: Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: (isSend ? AppColors.error : AppColors.success).withOpacity(0.1),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          isSend ? Icons.arrow_outward : Icons.call_received,
-                                          color: isSend ? AppColors.error : AppColors.success,
-                                          size: 18,
-                                        ),
-                                      ),
-                                      title: Text(
-                                        isSend ? 'Sent to: ${_formatAddress(tx.toAddress)}' : 'Received from: ${_formatAddress(tx.fromAddress)}',
-                                        style: const TextStyle(
-                                          color: AppColors.textPrimary,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      subtitle: Padding(
-                                        padding: const EdgeInsets.only(top: 4.0),
-                                        child: Text(
-                                          _formatDate(tx.timestamp),
-                                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                                        ),
-                                      ),
-                                      trailing: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            '${isSend ? '-' : '+'}${tx.amount}',
-                                            style: TextStyle(
-                                              color: isSend ? AppColors.error : AppColors.success,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 15,
-                                              fontFamily: 'monospace',
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            tx.currency.toUpperCase(),
-                                            style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
-                                          ),
-                                        ],
-                                      ),
-                                      children: [
-                                        const SizedBox(height: 12),
-                                        const Divider(color: Colors.white12, height: 1),
-                                        const SizedBox(height: 12),
-                                        _buildDetailRow(context, 'Tx Hash', tx.txHash, copyable: true),
-                                        const SizedBox(height: 8),
-                                        _buildDetailRow(context, 'From', tx.fromAddress),
-                                        const SizedBox(height: 8),
-                                        _buildDetailRow(context, 'To', tx.toAddress),
-                                        const SizedBox(height: 8),
-                                        _buildDetailRow(context, 'Status', tx.status.toUpperCase(), isStatus: true),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
+                              children: [
+                                const SizedBox(height: 12),
+                                const Divider(color: Colors.white12, height: 1),
+                                const SizedBox(height: 12),
+                                _buildDetailRow(
+                                  context,
+                                  'Tx Hash',
+                                  tx.txHash,
+                                  copyable: true,
+                                ),
+                                const SizedBox(height: 8),
+                                _buildDetailRow(
+                                  context,
+                                  'From',
+                                  tx.fromAddress,
+                                ),
+                                const SizedBox(height: 8),
+                                _buildDetailRow(context, 'To', tx.toAddress),
+                                const SizedBox(height: 8),
+                                _buildDetailRow(
+                                  context,
+                                  'Status',
+                                  tx.status.toUpperCase(),
+                                  isStatus: true,
+                                ),
+                              ],
                             ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ),
         ],
@@ -212,11 +265,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
         '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value, {bool copyable = false, bool isStatus = false}) {
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool copyable = false,
+    bool isStatus = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        ),
         Row(
           children: [
             Text(
@@ -234,10 +296,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 onTap: () {
                   Clipboard.setData(ClipboardData(text: value));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Copied transaction hash'), backgroundColor: AppColors.success),
+                    const SnackBar(
+                      content: Text('Copied transaction hash'),
+                      backgroundColor: AppColors.success,
+                    ),
                   );
                 },
-                child: const Icon(Icons.copy, color: AppColors.primary, size: 14),
+                child: const Icon(
+                  Icons.copy,
+                  color: AppColors.primary,
+                  size: 14,
+                ),
               ),
             ],
           ],

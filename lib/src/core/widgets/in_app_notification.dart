@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import '../constants/constants.dart';
 
 class InAppNotification {
-  static void show(BuildContext context, String message, {bool isError = true}) {
+  static void show(
+    BuildContext context,
+    String message, {
+    bool isError = true,
+  }) {
     final overlayState = Overlay.of(context);
     late OverlayEntry overlayEntry;
 
@@ -36,7 +40,8 @@ class _NotificationWidget extends StatefulWidget {
   State<_NotificationWidget> createState() => _NotificationWidgetState();
 }
 
-class _NotificationWidgetState extends State<_NotificationWidget> with SingleTickerProviderStateMixin {
+class _NotificationWidgetState extends State<_NotificationWidget>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
   late Animation<double> _fadeAnimation;
@@ -54,10 +59,7 @@ class _NotificationWidgetState extends State<_NotificationWidget> with SingleTic
     _offsetAnimation = Tween<Offset>(
       begin: const Offset(0.0, -1.5),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
     _fadeAnimation = CurvedAnimation(
       parent: _controller,
@@ -89,7 +91,7 @@ class _NotificationWidgetState extends State<_NotificationWidget> with SingleTic
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Positioned(
       top: MediaQuery.of(context).padding.top + 12,
       left: 16,
@@ -108,13 +110,16 @@ class _NotificationWidgetState extends State<_NotificationWidget> with SingleTic
               },
               onTap: _dismiss,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surface.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: widget.isError 
-                        ? AppColors.error.withOpacity(0.4) 
+                    color: widget.isError
+                        ? AppColors.error.withOpacity(0.4)
                         : AppColors.success.withOpacity(0.4),
                     width: 1.5,
                   ),
@@ -129,8 +134,12 @@ class _NotificationWidgetState extends State<_NotificationWidget> with SingleTic
                 child: Row(
                   children: [
                     Icon(
-                      widget.isError ? Icons.error_outline : Icons.check_circle_outline,
-                      color: widget.isError ? AppColors.error : AppColors.success,
+                      widget.isError
+                          ? Icons.error_outline
+                          : Icons.check_circle_outline,
+                      color: widget.isError
+                          ? AppColors.error
+                          : AppColors.success,
                       size: 24,
                     ),
                     const SizedBox(width: 12),
@@ -142,7 +151,9 @@ class _NotificationWidgetState extends State<_NotificationWidget> with SingleTic
                           Text(
                             widget.isError ? 'Transaction Failed' : 'Success',
                             style: TextStyle(
-                              color: widget.isError ? AppColors.error : AppColors.success,
+                              color: widget.isError
+                                  ? AppColors.error
+                                  : AppColors.success,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -163,7 +174,11 @@ class _NotificationWidgetState extends State<_NotificationWidget> with SingleTic
                     ),
                     const SizedBox(width: 8),
                     IconButton(
-                      icon: const Icon(Icons.close, color: AppColors.textSecondary, size: 18),
+                      icon: const Icon(
+                        Icons.close,
+                        color: AppColors.textSecondary,
+                        size: 18,
+                      ),
                       onPressed: _dismiss,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),

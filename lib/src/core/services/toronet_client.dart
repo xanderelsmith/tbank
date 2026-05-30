@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
+import 'package:tbank/src/core/services/api_urls.dart';
 import 'package:toronet/toronet.dart';
 import 'package:toronet/src/tns/tns.dart';
 import '../util/env.dart';
@@ -8,7 +12,12 @@ class ToronetClient {
 
   ToronetClient() {
     _network = Env.network;
-    _sdk = ToronetSDK(network: _network);
+    _sdk = ToronetSDK(
+      network: _network,
+      baseUrl: _network == Network.testnet ? ApiUrl.baseUrl : null,
+      customConnectWUrl: _network == Network.mainnet ? 'https://restapi.connectw.com/api' : null,
+      dio: _createDio(),
+    );
   }
 
   ToronetSDK get sdk => _sdk;
@@ -16,7 +25,24 @@ class ToronetClient {
 
   void switchNetwork(Network newNetwork) {
     _network = newNetwork;
-    _sdk = ToronetSDK(network: newNetwork);
+    _sdk = ToronetSDK(
+      network: newNetwork,
+      baseUrl: newNetwork == Network.testnet ? ApiUrl.baseUrl : null,
+      customConnectWUrl: newNetwork == Network.mainnet ? 'https://restapi.connectw.com/api' : null,
+      dio: _createDio(),
+    );
+  }
+
+  Dio _createDio() {
+    final dio = Dio();
+    dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () {
+        final client = HttpClient();
+        client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+        return client;
+      },
+    );
+    return dio;
   }
 
   // Short-hand accessors for SDK services

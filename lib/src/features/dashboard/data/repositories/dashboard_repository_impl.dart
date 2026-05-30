@@ -13,6 +13,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   Future<List<TokenBalance>> getBalances({required String address}) async {
     try {
       // Query multi-currency balances in parallel
+      // Toro Gas Token (ToroG) is the native blockchain token and must be queried via getBalance
       final futures = [
         _client.currency.getCurrencyBalance(
           currency: Currency.dollar,
@@ -22,10 +23,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
           currency: Currency.naira,
           address: address,
         ),
-        _client.currency.getCurrencyBalance(
-          currency: Currency.toro,
-          address: address,
-        ),
+        _client.balance.getBalance(address: address),
       ];
 
       final results = await Future.wait(futures);
@@ -34,21 +32,30 @@ class DashboardRepositoryImpl implements DashboardRepository {
         TokenBalance(
           symbol: 'USD',
           name: 'Toro Dollar',
-          amount: results[0]['balance']?.toString() ?? results[0]['result']?.toString() ?? '0.00',
+          amount:
+              results[0]['balance']?.toString() ??
+              results[0]['result']?.toString() ??
+              '0.00',
         ),
         TokenBalance(
           symbol: 'NGN',
           name: 'Toro Naira',
-          amount: results[1]['balance']?.toString() ?? results[1]['result']?.toString() ?? '0.00',
+          amount:
+              results[1]['balance']?.toString() ??
+              results[1]['result']?.toString() ??
+              '0.00',
         ),
         TokenBalance(
           symbol: 'ToroG',
           name: 'Toro Gas Token',
-          amount: results[2]['balance']?.toString() ?? results[2]['result']?.toString() ?? '0.00',
+          amount:
+              results[2]['bal_toro']?.toString() ??
+              results[2]['balance']?.toString() ??
+              '0.00',
         ),
       ];
     } on APIException catch (e) {
-      throw ServerFailure(e.message);
+      throw ServerFailure(e.message, statusCode: e.statusCode);
     } on ToroSDKException catch (e) {
       throw ServerFailure(e.message);
     } catch (e) {

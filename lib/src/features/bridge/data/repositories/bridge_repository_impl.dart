@@ -169,7 +169,7 @@ class BridgeRepositoryImpl implements BridgeRepository {
       }
       return response.toString();
     } on APIException catch (e) {
-      throw ServerFailure(e.message);
+      throw ServerFailure(e.message, statusCode: e.statusCode);
     } catch (e) {
       throw ServerFailure('Bridging transaction failed: $e');
     }

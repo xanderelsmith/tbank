@@ -11,6 +11,10 @@ class Env {
   }
 
   static Network get network {
+    final envValue = dotenv.maybeGet('TORONET_NETWORK');
+    if (envValue != null) {
+      return envValue.toLowerCase() == 'mainnet' ? Network.mainnet : Network.testnet;
+    }
     final value = String.fromEnvironment(
       'TORONET_NETWORK',
       defaultValue: 'testnet',
