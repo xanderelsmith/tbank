@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../onboarding/presentation/controllers/onboarding_controller.dart';
@@ -34,8 +35,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final activeWallet = context.watch<OnboardingController>().activeWallet;
     final controller = context.watch<HistoryController>();
 
-    if (activeWallet == null)
+    if (activeWallet == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     // Filter transactions locally based on selected tab
     final filteredTxns = controller.transactions.where((tx) {
@@ -68,8 +70,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 return ChoiceChip(
                   label: Text(type),
                   selected: isSelected,
+
                   selectedColor: AppColors.primary.withOpacity(0.2),
                   backgroundColor: AppColors.surface,
+                  checkmarkColor: AppColors.primary,
                   labelStyle: TextStyle(
                     color: isSelected
                         ? AppColors.primary
@@ -100,11 +104,94 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   controller.fetchTransactions(activeWallet.address),
               color: AppColors.primary,
               backgroundColor: AppColors.surface,
-              child: controller.isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.primary,
-                      ),
+              child: controller.isLoading && controller.transactions.isEmpty
+                  ? ListView.separated(
+                      padding: const EdgeInsets.all(24),
+                      itemCount: 6,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface.withOpacity(0.85),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.08),
+                            ),
+                          ),
+                          child: Shimmer.fromColors(
+                            baseColor: Colors.grey[800]!,
+                            highlightColor: Colors.grey[700]!,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 140,
+                                        height: 14,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        width: 100,
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Container(
+                                      width: 60,
+                                      height: 15,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      width: 30,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     )
                   : controller.errorMessage != null
                   ? Center(
