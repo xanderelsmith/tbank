@@ -17,6 +17,8 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
   }) : _client = client,
        _localDataSource = localDataSource;
 
+  ToronetClient get client => _client;
+
   @override
   Future<WalletEntity> createWallet({
     required String username,

@@ -22,6 +22,9 @@ class ToronetClient {
 
   ToronetSDK get sdk => _sdk;
   Network get network => _network;
+  String get nodeUrl => _network == Network.testnet
+      ? ApiUrl.baseUrl
+      : 'https://api.toronet.org/';
 
   void switchNetwork(Network newNetwork) {
     _network = newNetwork;

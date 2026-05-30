@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  StreamSubscription? _notificationSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -22,15 +25,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     dashboard.addListener(_onDashboardErrorListener);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final activeWallet = context.read<OnboardingController>().activeWallet;
+      final onboarding = context.read<OnboardingController>();
+      final activeWallet = onboarding.activeWallet;
       if (activeWallet != null) {
         dashboard.fetchBalances(activeWallet.address);
       }
+
+      _notificationSubscription = onboarding.notificationService?.stream.listen((notification) {
+        if (!mounted) return;
+
+        InAppNotification.show(
+          context,
+          '${notification.title}\n${notification.body}',
+          isError: false,
+        );
+
+        if (activeWallet != null) {
+          dashboard.fetchBalances(activeWallet.address);
+        }
+      });
     });
   }
 
   @override
   void dispose() {
+    _notificationSubscription?.cancel();
     context.read<DashboardController>().removeListener(
       _onDashboardErrorListener,
     );
