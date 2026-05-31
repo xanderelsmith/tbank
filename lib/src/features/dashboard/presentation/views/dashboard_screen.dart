@@ -97,7 +97,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: isTestnet ? AppColors.warning.withOpacity(0.2) : AppColors.success.withOpacity(0.2),
+                color: isTestnet
+                    ? AppColors.warning.withOpacity(0.2)
+                    : AppColors.success.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
                 border: Border.all(
                   color: isTestnet ? AppColors.warning : AppColors.success,
@@ -115,11 +117,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
         ),
         actions: [
-          if (wallet != null)
-            IconButton(
-              icon: const Icon(Icons.refresh, color: AppColors.primary),
-              onPressed: () => dashboard.fetchBalances(wallet.address),
-            ),
+          // if (wallet != null)
+          //   IconButton(
+          //     icon: const Icon(Icons.refresh, color: AppColors.primary),
+          //     onPressed: () => dashboard.fetchBalances(wallet.address),
+          //   ),
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: AppColors.error),
             onPressed: () => onboarding.logout(),

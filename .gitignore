@@ -45,3 +45,5 @@ app.*.map.json
 /android/app/release
 test_currencies.dart
 generate_icons.py
+walkthrough_tutorial_guide.md
+content.md
