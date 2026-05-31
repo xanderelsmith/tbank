@@ -54,10 +54,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   void dispose() {
-    _notificationSubscription?.cancel();
     context.read<DashboardController>().removeListener(
       _onDashboardErrorListener,
     );
+    _notificationSubscription?.cancel();
+
     super.dispose();
   }
 

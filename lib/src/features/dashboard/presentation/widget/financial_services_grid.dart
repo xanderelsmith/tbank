@@ -34,7 +34,7 @@ class FinancialServicesGrid extends StatelessWidget {
             mainAxisSpacing: 16,
             childAspectRatio: 1.19,
             children: List.generate(
-              6,
+              7,
               (index) => Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -114,6 +114,13 @@ class FinancialServicesGrid extends StatelessWidget {
                 icon: Icons.account_balance_outlined,
                 color: AppColors.error,
                 route: '/withdraw',
+              ),
+              const ActionCard(
+                title: 'Request',
+                subtitle: 'Payment link generator',
+                icon: Icons.qr_code_2_rounded,
+                color: AppColors.primary,
+                route: '/request',
               ),
               const ActionCard(
                 title: 'Virtual Card',

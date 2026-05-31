@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Core
 import 'src/core/constants/constants.dart';
 import 'src/core/services/toronet_client.dart';
+import 'src/core/services/deep_link_service.dart';
 
 // Onboarding Feature
 import 'src/features/onboarding/data/datasources/onboarding_local_datasource.dart';
@@ -29,6 +30,7 @@ import 'src/features/payment/data/repositories/payment_repository_impl.dart';
 import 'src/features/payment/presentation/controllers/payment_controller.dart';
 import 'src/features/payment/presentation/views/deposit_screen.dart';
 import 'src/features/payment/presentation/views/withdraw_screen.dart';
+import 'src/features/payment/presentation/views/request_payment_screen.dart';
 
 // Virtual Wallet Feature
 import 'src/features/virtual_wallet/data/repositories/virtual_wallet_repository_impl.dart';
@@ -49,6 +51,9 @@ import 'src/features/history/presentation/views/history_screen.dart';
 import 'src/features/developer/data/repositories/dev_tools_repository_impl.dart';
 import 'src/features/developer/presentation/controllers/dev_tools_controller.dart';
 import 'src/features/developer/presentation/views/dev_tools_screen.dart';
+
+// Wallet Connect Feature
+import 'src/features/wallet_connect/presentation/views/transaction_approval_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -106,8 +111,38 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  late DeepLinkService _deepLinkService;
+
+  @override
+  void initState() {
+    super.initState();
+    _deepLinkService = DeepLinkService();
+    _deepLinkService.uriStream.listen((uri) {
+      if (uri.scheme == 'torobank' && uri.host == 'sign-tx') {
+        _navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => TransactionApprovalScreen(uri: uri),
+            fullscreenDialog: true,
+          ),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _deepLinkService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +151,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ToroBank Developer Template',
       debugShowCheckedModeBanner: false,
+      navigatorKey: _navigatorKey,
       theme: AppTheme.darkTheme,
       home: onboarding.activeWallet == null
           ? const OnboardingScreen()
@@ -124,6 +160,7 @@ class MyApp extends StatelessWidget {
         '/transfer': (_) => const TransferScreen(),
         '/deposit': (_) => const DepositScreen(),
         '/withdraw': (_) => const WithdrawScreen(),
+        '/request': (_) => const RequestPaymentScreen(),
         '/virtual_wallet': (_) => const VirtualWalletScreen(),
         '/bridge': (_) => const BridgeScreen(),
         '/history': (_) => const HistoryScreen(),

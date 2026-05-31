@@ -45,5 +45,20 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Deep linking for Torobank Wallet Provider -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.tbank.wallet</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>torobank</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
