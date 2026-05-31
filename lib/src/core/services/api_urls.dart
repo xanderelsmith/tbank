@@ -1,3 +1,3 @@
 class ApiUrl {
-  static String baseUrl = "https://testnet.toronet.org/api/";
+  static String baseUrl = "https://testnet.toronet.org/api";
 }

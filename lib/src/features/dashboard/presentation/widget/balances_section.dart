@@ -1,30 +1,88 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:tbank/src/features/dashboard/presentation/widget/token_icon.dart';
+import 'package:toronet/toronet.dart';
 import 'package:tbank/src/core/constants/constants.dart';
 import 'package:tbank/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+
+Currency _parseCurrency(String symbol) {
+  switch (symbol.toUpperCase()) {
+    case 'TOROG':
+    case 'TORO':
+      return Currency.toro;
+    case 'USD':
+    case 'USDC':
+    case 'USDT':
+      return Currency.dollar;
+    case 'EUR':
+      return Currency.euro;
+    case 'GBP':
+      return Currency.pound;
+    case 'EGP':
+      return Currency.egp;
+    case 'KSH':
+      return Currency.ksh;
+    case 'ZAR':
+      return Currency.zar;
+    case 'ETH':
+      return Currency.eth;
+    case 'NGN':
+    default:
+      return Currency.naira;
+  }
+}
 
 class BalancesSection extends StatelessWidget {
   final DashboardController dashboard;
 
-  const BalancesSection({required this.dashboard});
+  const BalancesSection({super.key, required this.dashboard});
 
   @override
   Widget build(BuildContext context) {
+    final balances = dashboard.balances;
+    
+    // Display up to 3 balances inline
+    final displayCount = balances.length > 3 ? 3 : balances.length;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Asset Balances',
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Asset Balances',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+            if (balances.length > 3)
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/all_balances');
+                },
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  'View More',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 12),
-        if (dashboard.isLoading && dashboard.balances.isEmpty)
+        if (dashboard.isLoading && balances.isEmpty)
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -95,11 +153,12 @@ class BalancesSection extends StatelessWidget {
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: dashboard.balances.length,
+            itemCount: displayCount,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final balance = dashboard.balances[index];
-              final isToroG = balance.symbol == 'ToroG';
+              final balance = balances[index];
+              final currency = _parseCurrency(balance.symbol);
+              final isToro = currency == Currency.toro;
               log(
                 'Building balance card for ${balance.symbol} with amount ${balance.amount}',
               );
@@ -109,7 +168,7 @@ class BalancesSection extends StatelessWidget {
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isToroG
+                    color: isToro
                         ? AppColors.secondary.withOpacity(0.2)
                         : AppColors.primary.withOpacity(0.15),
                   ),
@@ -119,27 +178,7 @@ class BalancesSection extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color:
-                                (isToroG
-                                        ? AppColors.secondary
-                                        : AppColors.primary)
-                                    .withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isToroG
-                                ? Icons.local_fire_department
-                                : Icons.monetization_on,
-                            color: isToroG
-                                ? AppColors.secondary
-                                : AppColors.primary,
-                            size: 24,
-                          ),
-                        ),
+                        TokenIcon(currency: currency),
                         const SizedBox(width: 14),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +206,7 @@ class BalancesSection extends StatelessWidget {
                     Text(
                       balance.amount,
                       style: TextStyle(
-                        color: isToroG
+                        color: isToro
                             ? AppColors.secondary
                             : AppColors.textPrimary,
                         fontWeight: FontWeight.bold,

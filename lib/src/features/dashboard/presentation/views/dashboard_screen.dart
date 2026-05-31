@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:toronet/toronet.dart';
 import 'package:tbank/src/features/dashboard/presentation/widget/balances_section.dart';
 import 'package:tbank/src/features/dashboard/presentation/widget/financial_services_grid.dart';
 import 'package:tbank/src/features/dashboard/presentation/widget/wallet_header.dart';
 import '../../../../core/constants/constants.dart';
+import '../../../../core/util/env.dart';
 import '../../../../core/widgets/in_app_notification.dart';
 import '../../../onboarding/presentation/controllers/onboarding_controller.dart';
 import '../controllers/dashboard_controller.dart';
@@ -74,26 +76,52 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final onboarding = context.watch<OnboardingController>();
     final dashboard = context.watch<DashboardController>();
     final wallet = onboarding.activeWallet;
+    final isTestnet = Env.network == Network.testnet;
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('ToroBank'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              Icons.notifications_on_outlined,
-              color: AppColors.primary,
+        leading: IconButton(
+          icon: const Icon(Icons.history_rounded, color: AppColors.primary),
+          onPressed: () {
+            Navigator.pushNamed(context, '/history');
+          },
+        ),
+        title: Row(
+          spacing: 8,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Image.asset('assets/images/logo.png', height: 28),
+            const Text('ToroBank'),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: isTestnet ? AppColors.warning.withOpacity(0.2) : AppColors.success.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: isTestnet ? AppColors.warning : AppColors.success,
+                ),
+              ),
+              child: Text(
+                isTestnet ? 'TESTNET' : 'MAINNET',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isTestnet ? AppColors.warning : AppColors.success,
+                ),
+              ),
             ),
-            onPressed: () {},
-          ),
+          ],
+        ),
+        actions: [
           if (wallet != null)
             IconButton(
               icon: const Icon(Icons.refresh, color: AppColors.primary),
               onPressed: () => dashboard.fetchBalances(wallet.address),
             ),
           IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.error),
+            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
             onPressed: () => onboarding.logout(),
           ),
         ],

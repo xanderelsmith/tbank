@@ -136,3 +136,7 @@ class AppTheme {
     );
   }
 }
+
+class AppConstants {
+  static const List<String> supportedCurrencies = ['USD', 'NGN', 'EUR', 'GBP', 'EGP', 'KSH', 'ZAR', 'ToroG'];
+}

@@ -106,7 +106,7 @@ class _TransferScreenState extends State<TransferScreen> {
                               isExpanded: true,
                               icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary),
                               style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                              items: ['USD', 'NGN', 'TOROG'].map((curr) {
+                              items: AppConstants.supportedCurrencies.map((curr) {
                                 return DropdownMenuItem(
                                   value: curr,
                                   child: Text(curr),

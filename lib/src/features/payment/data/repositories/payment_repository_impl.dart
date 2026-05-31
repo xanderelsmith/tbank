@@ -38,32 +38,69 @@ class PaymentRepositoryImpl implements PaymentRepository {
         final String operation;
         final Map<String, dynamic> requestData;
 
-        if (currency.toUpperCase() == 'TOROG' || currency.toUpperCase() == 'TORO') {
-          url = 'https://testnet.toronet.org/api/token/toro/ad';
+        String mappedCurrency;
+        bool isToken = false;
+        switch (currency.toUpperCase()) {
+          case 'USD':
+          case 'USDC':
+            mappedCurrency = 'dollar';
+            break;
+          case 'NGN':
+            mappedCurrency = 'naira';
+            break;
+          case 'EUR':
+            mappedCurrency = 'euro';
+            break;
+          case 'GBP':
+            mappedCurrency = 'pound';
+            break;
+          case 'EGP':
+            mappedCurrency = 'egp';
+            break;
+          case 'KSH':
+            mappedCurrency = 'ksh';
+            break;
+          case 'ZAR':
+            mappedCurrency = 'zar';
+            break;
+          case 'ETH':
+            mappedCurrency = 'eth';
+            isToken = true;
+            break;
+          case 'ESPEES':
+            mappedCurrency = 'espees';
+            isToken = true;
+            break;
+          case 'PLAST':
+            mappedCurrency = 'plast';
+            isToken = true;
+            break;
+          case 'TOROG':
+          case 'TORO':
+            mappedCurrency = 'toro';
+            isToken = true;
+            break;
+          default:
+            mappedCurrency = 'naira'; // fallback
+        }
+
+        if (isToken) {
+          url = 'https://testnet.toronet.org/api/token/$mappedCurrency/ad';
           operation = 'mint';
-          requestData = {
-            'op': operation,
-            'params': [
-              {'name': 'admin', 'value': '0x43F78b342084e370f10e0Cd07d56d95c1728C9D4'},
-              {'name': 'adminpwd', 'value': 'toronet'},
-              {'name': 'addr', 'value': address},
-              {'name': 'val', 'value': amount},
-            ],
-          };
         } else {
-          final mappedCurrency = currency.toUpperCase() == 'USD' ? 'dollar' : 'naira';
           url = 'https://testnet.toronet.org/api/currency/$mappedCurrency/ad';
           operation = 'importcurrency';
-          requestData = {
-            'op': operation,
-            'params': [
-              {'name': 'admin', 'value': '0x43F78b342084e370f10e0Cd07d56d95c1728C9D4'},
-              {'name': 'adminpwd', 'value': 'toronet'},
-              {'name': 'addr', 'value': address},
-              {'name': 'val', 'value': amount},
-            ],
-          };
         }
+
+        requestData = {
+          'op': operation,
+          'params': [
+            {'name': 'admin', 'value': '0x43F78b342084e370f10e0Cd07d56d95c1728C9D4'},
+            {'name': 'adminpwd', 'value': 'toronet'},
+            {'name': 'addr', 'value': address},
+            {'name': 'val', 'value': amount},
+          ],
+        };
 
         developer.log('Testnet detected: Minting $amount $currency instantly to $address...', name: 'PaymentRepository');
         

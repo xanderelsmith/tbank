@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:toronet/toronet.dart';
 import '../../../../core/constants/constants.dart';
+import '../../../../core/util/env.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
@@ -104,7 +106,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                               isExpanded: true,
                               icon: const Icon(Icons.arrow_drop_down, color: AppColors.primary),
                               style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
-                              items: ['NGN', 'USD'].map((curr) {
+                              items: AppConstants.supportedCurrencies.map((curr) {
                                 return DropdownMenuItem(
                                   value: curr,
                                   child: Text(curr),
@@ -304,6 +306,16 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                       onPressed: !_accountVerified
                           ? null
                           : () async {
+                              if (Env.network == Network.testnet) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Withdrawals are only supported on the Mainnet. Coming soon to Testnet!'),
+                                    backgroundColor: AppColors.primary,
+                                  ),
+                                );
+                                return;
+                              }
+
                               if (_formKey.currentState!.validate() && _selectedBank != null) {
                                 final txHash = await controller.executeWithdrawal(
                                   address: activeWallet.address,

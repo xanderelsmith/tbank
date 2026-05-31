@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:tbank/src/core/util/env.dart';
+import 'package:toronet/toronet.dart';
 import '../../../../core/constants/constants.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_button.dart';
@@ -21,7 +23,9 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final activeWallet = context.read<OnboardingController>().activeWallet;
       if (activeWallet != null) {
-        context.read<VirtualWalletController>().fetchVirtualAccount(activeWallet.address);
+        context.read<VirtualWalletController>().fetchVirtualAccount(
+          activeWallet.address,
+        );
       }
     });
   }
@@ -31,15 +35,14 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
     final activeWallet = context.watch<OnboardingController>().activeWallet;
     final controller = context.watch<VirtualWalletController>();
 
-    if (activeWallet == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (activeWallet == null)
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     final vAccount = controller.virtualAccount;
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Virtual Card'),
-      ),
+      appBar: AppBar(title: const Text('Virtual Card')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -48,7 +51,9 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
             if (controller.isLoading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 80.0),
-                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
+                ),
               )
             else if (vAccount == null) ...[
               // Setup Card UI
@@ -62,30 +67,57 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
                         color: AppColors.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.credit_card_off_outlined, color: AppColors.primary, size: 40),
+                      child: const Icon(
+                        Icons.credit_card_off_outlined,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     const Text(
                       'No Active Virtual Card',
-                      style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 18),
+                      style: TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
                       'Generate a virtual bank account linked to your Toronet address to accept payments directly.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 13,
+                      ),
                     ),
                     const SizedBox(height: 30),
                     if (controller.errorMessage != null) ...[
                       Text(
                         controller.errorMessage!,
-                        style: const TextStyle(color: AppColors.error, fontSize: 12),
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 12,
+                        ),
                       ),
                       const SizedBox(height: 12),
                     ],
                     GradientButton(
                       text: 'Create Virtual Account',
-                      onPressed: () => controller.createVirtualAccount(activeWallet.address),
+                      onPressed: () {
+                        if (Env.network == Network.testnet) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Virtual cards are only supported on the Mainnet. Coming soon to Testnet!',
+                              ),
+                              backgroundColor: AppColors.primary,
+                            ),
+                          );
+                        } else {
+                          controller.createVirtualAccount(activeWallet.address);
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -113,7 +145,11 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
                       bottom: -30,
                       child: Opacity(
                         opacity: 0.1,
-                        child: Icon(Icons.blur_circular, size: 240, color: Colors.white.withOpacity(0.4)),
+                        child: Icon(
+                          Icons.blur_circular,
+                          size: 240,
+                          color: Colors.white.withOpacity(0.4),
+                        ),
                       ),
                     ),
                     Padding(
@@ -134,7 +170,11 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
                                   fontSize: 15,
                                 ),
                               ),
-                              const Icon(Icons.contactless, color: AppColors.background, size: 28),
+                              const Icon(
+                                Icons.contactless,
+                                color: AppColors.background,
+                                size: 28,
+                              ),
                             ],
                           ),
                           Column(
@@ -197,7 +237,11 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
                                 child: const Center(
                                   child: Text(
                                     'TNS',
-                                    style: TextStyle(color: AppColors.background, fontSize: 12, fontWeight: FontWeight.w900),
+                                    style: TextStyle(
+                                      color: AppColors.background,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -212,9 +256,16 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
               const SizedBox(height: 32),
 
               // Detail Fields Table
-              const Text('Routing Information', style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.bold, fontSize: 13)),
+              const Text(
+                'Routing Information',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               const SizedBox(height: 12),
-              
+
               GlassContainer(
                 child: Column(
                   children: [
@@ -224,9 +275,14 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
                       'Account No.',
                       vAccount.accountNumber,
                       onCopy: () {
-                        Clipboard.setData(ClipboardData(text: vAccount.accountNumber));
+                        Clipboard.setData(
+                          ClipboardData(text: vAccount.accountNumber),
+                        );
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Account number copied'), backgroundColor: AppColors.success),
+                          const SnackBar(
+                            content: Text('Account number copied'),
+                            backgroundColor: AppColors.success,
+                          ),
                         );
                       },
                     ),
@@ -236,23 +292,33 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.12)),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.12),
+                  ),
                 ),
                 child: const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.info_outline, color: AppColors.primary, size: 20),
+                    Icon(
+                      Icons.info_outline,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Incoming bank transfers made to this virtual account are settled to your Toronet Naira wallet address automatically.',
-                        style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
                       ),
                     ),
                   ],
@@ -281,15 +347,30 @@ class _VirtualWalletScreenState extends State<VirtualWalletScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+        Text(
+          label,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        ),
         Row(
           children: [
-            Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold, fontSize: 14, fontFamily: 'monospace')),
+            Text(
+              value,
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontFamily: 'monospace',
+              ),
+            ),
             if (onCopy != null) ...[
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: onCopy,
-                child: const Icon(Icons.copy, color: AppColors.primary, size: 16),
+                child: const Icon(
+                  Icons.copy,
+                  color: AppColors.primary,
+                  size: 16,
+                ),
               ),
             ],
           ],

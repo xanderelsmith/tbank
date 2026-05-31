@@ -17,6 +17,7 @@ import 'src/features/onboarding/presentation/views/onboarding_screen.dart';
 import 'src/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'src/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'src/features/dashboard/presentation/views/dashboard_screen.dart';
+import 'src/features/dashboard/presentation/views/all_balances_screen.dart';
 
 // Transfer Feature
 import 'src/features/transfer/data/repositories/transfer_repository_impl.dart';
@@ -127,6 +128,7 @@ class MyApp extends StatelessWidget {
         '/bridge': (_) => const BridgeScreen(),
         '/history': (_) => const HistoryScreen(),
         '/developer': (_) => const DevToolsScreen(),
+        '/all_balances': (_) => const AllBalancesScreen(),
       },
     );
   }

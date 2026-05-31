@@ -12,48 +12,40 @@ class DashboardRepositoryImpl implements DashboardRepository {
   @override
   Future<List<TokenBalance>> getBalances({required String address}) async {
     try {
-      // Query multi-currency balances in parallel
-      // Toro Gas Token (ToroG) is the native blockchain token and must be queried via getBalance
-      final futures = [
-        _client.currency.getCurrencyBalance(
-          currency: Currency.dollar,
-          address: address,
-        ),
-        _client.currency.getCurrencyBalance(
-          currency: Currency.naira,
-          address: address,
-        ),
-        _client.balance.getBalance(address: address),
-      ];
+      // The getBalance endpoint returns all asset balances in a single JSON payload
+      // e.g. {bal_toro: 150, bal_dollar: 14400, bal_naira: 1954000, ...}
+      final result = await _client.balance.getBalance(address: address);
 
-      final results = await Future.wait(futures);
+      final List<TokenBalance> balances = [];
 
-      return [
-        TokenBalance(
-          symbol: 'USD',
-          name: 'Toro Dollar',
-          amount:
-              results[0]['balance']?.toString() ??
-              results[0]['result']?.toString() ??
-              '0.00',
-        ),
-        TokenBalance(
-          symbol: 'NGN',
-          name: 'Toro Naira',
-          amount:
-              results[1]['balance']?.toString() ??
-              results[1]['result']?.toString() ??
-              '0.00',
-        ),
-        TokenBalance(
-          symbol: 'ToroG',
-          name: 'Toro Gas Token',
-          amount:
-              results[2]['bal_toro']?.toString() ??
-              results[2]['balance']?.toString() ??
-              '0.00',
-        ),
-      ];
+      // Ordered list of supported currencies to map from the API response
+      final currencyMap = {
+        'bal_toro': {'symbol': 'ToroG', 'name': 'Toro Gas Token'},
+        'bal_dollar': {'symbol': 'USD', 'name': 'Toro Dollar'},
+        'bal_naira': {'symbol': 'NGN', 'name': 'Toro Naira'},
+        'bal_euro': {'symbol': 'EUR', 'name': 'Toro Euro'},
+        'bal_pound': {'symbol': 'GBP', 'name': 'Toro Pound'},
+        'bal_egp': {'symbol': 'EGP', 'name': 'Toro EGP'},
+        'bal_ksh': {'symbol': 'KSH', 'name': 'Toro KSH'},
+        'bal_zar': {'symbol': 'ZAR', 'name': 'Toro ZAR'},
+        'bal_eth': {'symbol': 'ETH', 'name': 'Ethereum'},
+        'bal_espees': {'symbol': 'ESPEES', 'name': 'Toro Espees'},
+        'bal_plast': {'symbol': 'PLAST', 'name': 'Toro Plast'},
+      };
+
+      for (var entry in currencyMap.entries) {
+        final key = entry.key;
+        final info = entry.value;
+        if (result.containsKey(key)) {
+          balances.add(TokenBalance(
+            symbol: info['symbol']!,
+            name: info['name']!,
+            amount: result[key]?.toString() ?? '0',
+          ));
+        }
+      }
+
+      return balances;
     } on APIException catch (e) {
       throw ServerFailure(e.message, statusCode: e.statusCode);
     } on ToroSDKException catch (e) {

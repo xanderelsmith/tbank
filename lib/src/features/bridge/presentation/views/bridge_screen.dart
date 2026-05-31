@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:toronet/toronet.dart';
 import '../../../../core/constants/constants.dart';
+import '../../../../core/util/env.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
@@ -283,6 +285,16 @@ class _BridgeScreenState extends State<BridgeScreen> {
                       text: 'Execute Cross-Chain Bridge',
                       isLoading: controller.isLoading,
                       onPressed: () async {
+                        if (Env.network == Network.testnet) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Cross-chain bridging is only supported on the Mainnet. Coming soon to Testnet!'),
+                              backgroundColor: AppColors.primary,
+                            ),
+                          );
+                          return;
+                        }
+
                         if (_formKey.currentState!.validate()) {
                           final txHash = await controller.executeBridge(
                             fromAddress: _sourceAddressController.text,
