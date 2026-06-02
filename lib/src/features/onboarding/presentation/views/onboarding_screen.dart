@@ -1,153 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:tbank/src/core/constants/appimages.dart';
-import 'package:tbank/src/features/onboarding/presentation/widgets/create_wallet_tab.dart';
-import 'package:tbank/src/features/onboarding/presentation/widgets/import_wallet_tab.dart';
-import '../../../../core/constants/constants.dart';
-import '../../../../core/widgets/glass_container.dart';
-import '../controllers/onboarding_controller.dart';
+import 'package:tbank/src/core/constants/constants.dart';
+import 'package:tbank/src/core/widgets/gradient_button.dart';
+import 'package:tbank/src/features/onboarding/presentation/views/create_wallet_name_screen.dart';
+import 'package:tbank/src/features/onboarding/presentation/views/import_wallet_screen.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
-}
-
-class _OnboardingScreenState extends State<OnboardingScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  final _createFormKey = GlobalKey<FormState>();
-  final _importFormKey = GlobalKey<FormState>();
-
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmController = TextEditingController();
-  final _importKeyController = TextEditingController();
-  final _importUsernameController = TextEditingController();
-  final _importPasswordController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _usernameController.dispose();
-    _passwordController.dispose();
-    _importKeyController.dispose();
-    _importUsernameController.dispose();
-    _importPasswordController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final controller = context.watch<OnboardingController>();
-
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(color: AppColors.background),
-        child: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: constraints.maxHeight - 64,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Header Section
-                      Center(child: Image.asset(AppImages.logo)),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'ToroBank',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Developer Clean Architecture Template for Toronet',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 30),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(flex: 2),
+              // Header Section
+              Center(child: Image.asset(AppImages.logo, height: 80)),
+              const SizedBox(height: 32),
+              const Text(
+                'Private and secure',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Private keys never leave your device.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const Spacer(flex: 3),
 
-                      // Tabs & Forms
-                      GlassContainer(
-                        height: 500,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Expanded(
-                              child: TabBar(
-                                controller: _tabController,
-                                indicatorColor: AppColors.primary,
-                                labelColor: AppColors.primary,
-                                unselectedLabelColor: AppColors.textSecondary,
-                                indicatorSize: TabBarIndicatorSize.tab,
-                                labelStyle: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                tabs: const [
-                                  Tab(text: 'Create Wallet'),
-                                  Tab(text: 'Import Wallet'),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            SizedBox(
-                              height: 400,
-                              child: TabBarView(
-                                controller: _tabController,
-                                children: [
-                                  // Create tab
-                                  CreateWalletTab(
-                                    createFormKey: _createFormKey,
-                                    usernameController: _usernameController,
-                                    controller: controller,
-                                    confirmController: _confirmController,
-                                    passwordController: _passwordController,
-                                  ),
-
-                                  // Import tab
-                                  ImportWalletTab(
-                                    importFormKey: _importFormKey,
-                                    importKeyController: _importKeyController,
-                                    importUsernameController:
-                                        _importUsernameController,
-                                    importPasswordController:
-                                        _importPasswordController,
-                                    controller: controller,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+              // Buttons
+              GradientButton(
+                text: 'Create New Wallet',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CreateWalletNameScreen(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ImportWalletScreen(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  'I already have a wallet',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
                   ),
                 ),
-              );
-            },
+              ),
+              const SizedBox(height: 32),
+            ],
           ),
         ),
       ),

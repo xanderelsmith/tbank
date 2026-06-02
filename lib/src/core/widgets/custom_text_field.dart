@@ -10,7 +10,9 @@ class CustomTextField extends StatefulWidget {
   final String? Function(String?)? validator;
   final IconData? prefixIcon;
   final void Function(String)? onChanged;
-
+  final int? maxLength;
+  final bool? readOnly;
+  final Future<Null> Function()? onTap;
   const CustomTextField({
     super.key,
     required this.labelText,
@@ -21,6 +23,9 @@ class CustomTextField extends StatefulWidget {
     this.validator,
     this.prefixIcon,
     this.onChanged,
+    this.maxLength,
+    this.readOnly,
+    this.onTap,
   });
 
   @override
@@ -48,21 +53,28 @@ class _CustomTextFieldState extends State<CustomTextField> {
           controller: widget.controller,
           obscureText: widget.isPassword ? _obscureText : false,
           keyboardType: widget.keyboardType,
+          maxLength: widget.maxLength,
           validator: widget.validator,
           onChanged: widget.onChanged,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 15,
-          ),
+          readOnly: widget.readOnly ?? false,
+          onTap: widget.onTap,
+          style: const TextStyle(color: AppColors.textPrimary, fontSize: 15),
           decoration: InputDecoration(
+            counterText: "", // Hide the 0/6 counter text underneath
             hintText: widget.hintText,
             prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, color: AppColors.textSecondary, size: 20)
+                ? Icon(
+                    widget.prefixIcon,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  )
                 : null,
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
-                      _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscureText
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: AppColors.textSecondary,
                       size: 20,
                     ),

@@ -4,6 +4,7 @@ import '../../../../core/constants/constants.dart';
 import '../../../../core/widgets/glass_container.dart';
 import '../../../../core/widgets/gradient_button.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/pin_input_field.dart';
 import '../../../dashboard/presentation/controllers/dashboard_controller.dart';
 import '../../../../core/widgets/in_app_notification.dart';
 import '../../../onboarding/presentation/controllers/onboarding_controller.dart';
@@ -20,14 +21,14 @@ class _TransferScreenState extends State<TransferScreen> {
   final _formKey = GlobalKey<FormState>();
   final _recipientController = TextEditingController();
   final _amountController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _pinController = TextEditingController();
   String _selectedCurrency = 'USD';
 
   @override
   void dispose() {
     _recipientController.dispose();
     _amountController.dispose();
-    _passwordController.dispose();
+    _pinController.dispose();
     super.dispose();
   }
 
@@ -146,16 +147,13 @@ class _TransferScreenState extends State<TransferScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Confirm Password
-                    CustomTextField(
-                      labelText: 'Verification Password',
-                      hintText: 'Enter password to sign tx',
-                      controller: _passwordController,
-                      isPassword: true,
-                      prefixIcon: Icons.lock_outline,
+                    PinInputField(
+                      labelText: '6-Digit PIN',
+                      hintText: 'Tap to enter PIN to sign tx',
+                      controller: _pinController,
                       validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return 'Password is required';
+                        if (val == null || val.trim().length != 6) {
+                          return 'A 6-digit PIN is required';
                         }
                         return null;
                       },
@@ -186,7 +184,7 @@ class _TransferScreenState extends State<TransferScreen> {
                             toAddress: recipientAddress,
                             amount: _amountController.text,
                             currency: _selectedCurrency,
-                            password: _passwordController.text,
+                            password: _pinController.text,
                           );
 
                           if (txHash != null && mounted) {
@@ -196,7 +194,7 @@ class _TransferScreenState extends State<TransferScreen> {
                             controller.clearState();
                             _recipientController.clear();
                             _amountController.clear();
-                            _passwordController.clear();
+                            _pinController.clear();
                             
                             showDialog(
                               context: context,

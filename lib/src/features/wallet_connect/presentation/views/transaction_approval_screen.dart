@@ -6,6 +6,8 @@ import 'package:tbank/src/core/widgets/gradient_button.dart';
 import 'package:tbank/src/core/widgets/in_app_notification.dart';
 import 'package:tbank/src/features/onboarding/presentation/controllers/onboarding_controller.dart';
 import 'package:tbank/src/features/transfer/presentation/controllers/transfer_controller.dart';
+import 'package:tbank/src/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:tbank/src/core/widgets/pin_input_field.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class TransactionApprovalScreen extends StatefulWidget {
@@ -19,14 +21,19 @@ class TransactionApprovalScreen extends StatefulWidget {
 }
 
 class _TransactionApprovalScreenState extends State<TransactionApprovalScreen> {
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
   bool _isSigning = false;
 
   void _onReject() async {
     final callback = widget.uri.queryParameters['callback'];
     if (callback != null && callback.isNotEmpty) {
-      final callbackUri = Uri.parse(
-        '$callback?status=failed&reason=user_rejected',
+      final originalCallbackUri = Uri.parse(callback);
+      final callbackUri = originalCallbackUri.replace(
+        queryParameters: {
+          ...originalCallbackUri.queryParameters,
+          'status': 'failed',
+          'reason': 'user_rejected',
+        },
       );
       try {
         if (await canLaunchUrl(callbackUri)) {
@@ -42,11 +49,11 @@ class _TransactionApprovalScreenState extends State<TransactionApprovalScreen> {
   }
 
   void _onApprove() async {
-    final password = _passwordController.text;
+    final password = _pinController.text;
     if (password.isEmpty) {
       InAppNotification.show(
         context,
-        'Please enter your password to sign the transaction',
+        'Please enter your PIN to sign the transaction',
         isError: true,
       );
       return;
@@ -89,8 +96,13 @@ class _TransactionApprovalScreenState extends State<TransactionApprovalScreen> {
 
       if (txHash != null) {
         if (callback != null && callback.isNotEmpty) {
-          final callbackUri = Uri.parse(
-            '$callback?status=success&txHash=$txHash',
+          final originalCallbackUri = Uri.parse(callback);
+          final callbackUri = originalCallbackUri.replace(
+            queryParameters: {
+              ...originalCallbackUri.queryParameters,
+              'status': 'success',
+              'txHash': txHash,
+            },
           );
           try {
             if (await canLaunchUrl(callbackUri)) {
@@ -104,9 +116,13 @@ class _TransactionApprovalScreenState extends State<TransactionApprovalScreen> {
           }
         }
         if (mounted) {
+          final dashboardController = context.read<DashboardController>();
+          dashboardController.fetchBalances(activeWallet.address);
+
           InAppNotification.show(
             context,
             'Transaction signed and broadcasted successfully!',
+            isError: false,
           );
           Navigator.of(context).pop();
         }
@@ -188,11 +204,10 @@ class _TransactionApprovalScreenState extends State<TransactionApprovalScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-              CustomTextField(
-                controller: _passwordController,
-                labelText: 'Wallet Password / PIN',
-                hintText: 'Enter password to sign',
-                isPassword: true,
+              PinInputField(
+                controller: _pinController,
+                labelText: '6-Digit PIN',
+                hintText: 'Tap to enter PIN to sign',
               ),
               const Spacer(),
               Row(

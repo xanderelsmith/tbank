@@ -6,6 +6,7 @@ import 'package:dio/io.dart';
 import 'package:toronet/toronet.dart';
 import 'package:toronet/src/payments/payments.dart' as pay;
 import '../../../../core/services/toronet_client.dart';
+import '../../../../core/services/apiurl.dart';
 import '../../../../core/util/env.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/entities/bank_entity.dart';
@@ -85,30 +86,37 @@ class PaymentRepositoryImpl implements PaymentRepository {
         }
 
         if (isToken) {
-          url = 'https://testnet.toronet.org/api/token/$mappedCurrency/ad';
+          url = '${ApiUrl.testbaseUrl}/token/$mappedCurrency/ad';
           operation = 'mint';
         } else {
-          url = 'https://testnet.toronet.org/api/currency/$mappedCurrency/ad';
+          url = '${ApiUrl.testbaseUrl}/currency/$mappedCurrency/ad';
           operation = 'importcurrency';
         }
 
         requestData = {
           'op': operation,
           'params': [
-            {'name': 'admin', 'value': '0x43F78b342084e370f10e0Cd07d56d95c1728C9D4'},
-            {'name': 'adminpwd', 'value': 'toronet'},
+            {
+              'name': 'admin',
+              'value': Env.testnetSuperAdminAddress,
+            },
+            {'name': 'adminpwd', 'value': Env.testnetSuperAdminPassword},
             {'name': 'addr', 'value': address},
             {'name': 'val', 'value': amount},
           ],
         };
 
-        developer.log('Testnet detected: Minting $amount $currency instantly to $address...', name: 'PaymentRepository');
-        
+        developer.log(
+          'Testnet detected: Minting $amount $currency instantly to $address...',
+          name: 'PaymentRepository',
+        );
+
         final dio = Dio();
         dio.httpClientAdapter = IOHttpClientAdapter(
           createHttpClient: () {
             final client = HttpClient();
-            client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+            client.badCertificateCallback =
+                (X509Certificate cert, String host, int port) => true;
             return client;
           },
         );
@@ -122,7 +130,10 @@ class PaymentRepositoryImpl implements PaymentRepository {
           ),
         );
 
-        developer.log('Testnet mint response status: ${response.statusCode}, body: ${response.data}', name: 'PaymentRepository');
+        developer.log(
+          'Testnet mint response status: ${response.statusCode}, body: ${response.data}',
+          name: 'PaymentRepository',
+        );
 
         if (response.statusCode == 200) {
           final dynamic rawData = response.data;
@@ -132,25 +143,40 @@ class PaymentRepositoryImpl implements PaymentRepository {
           } else if (rawData is Map) {
             responseMap = Map<String, dynamic>.from(rawData);
           } else {
-            throw const ServerFailure('Invalid response structure from testnet node');
+            throw const ServerFailure(
+              'Invalid response structure from testnet node',
+            );
           }
 
           if (responseMap['result'] == true) {
-            final txHash = responseMap['transaction']?.toString() ?? 'tx_testnet_success';
-            developer.log('Testnet mint success: txHash=$txHash', name: 'PaymentRepository');
+            final txHash =
+                responseMap['transaction']?.toString() ?? 'tx_testnet_success';
+            developer.log(
+              'Testnet mint success: txHash=$txHash',
+              name: 'PaymentRepository',
+            );
             return txHash;
           } else {
-            final err = responseMap['error']?.toString() ?? 'Failed to import stablecoin on testnet';
-            developer.log('Testnet mint failed: $err', name: 'PaymentRepository');
+            final err =
+                responseMap['error']?.toString() ??
+                'Failed to import stablecoin on testnet';
+            developer.log(
+              'Testnet mint failed: $err',
+              name: 'PaymentRepository',
+            );
             throw ServerFailure(err);
           }
         } else {
-          throw ServerFailure('Testnet node responded with HTTP status ${response.statusCode}');
+          throw ServerFailure(
+            'Testnet node responded with HTTP status ${response.statusCode}',
+          );
         }
       }
 
       // Mainnet/Live logic using ConnectW SDK
-      final currencyEnum = currency.toUpperCase() == 'USD' ? pay.Currency.USD : pay.Currency.NGN;
+      final currencyEnum = currency.toUpperCase() == 'USD'
+          ? pay.Currency.USD
+          : pay.Currency.NGN;
 
       final depositResult = await _client.payments.depositFunds(
         userAddress: address,
@@ -161,16 +187,33 @@ class PaymentRepositoryImpl implements PaymentRepository {
         adminpwd: Env.adminPassword,
       );
 
-      developer.log('initiateDeposit success: result=$depositResult', name: 'PaymentRepository');
-      return depositResult['result']?.toString() ?? depositResult['txid']?.toString() ?? depositResult.toString();
+      developer.log(
+        'initiateDeposit success: result=$depositResult',
+        name: 'PaymentRepository',
+      );
+      return depositResult['result']?.toString() ??
+          depositResult['txid']?.toString() ??
+          depositResult.toString();
     } on ValidationException catch (e) {
-      developer.log('initiateDeposit validation exception: ${e.message}', name: 'PaymentRepository', error: e);
+      developer.log(
+        'initiateDeposit validation exception: ${e.message}',
+        name: 'PaymentRepository',
+        error: e,
+      );
       throw ValidationFailure(e.message);
     } on APIException catch (e) {
-      developer.log('initiateDeposit API exception: ${e.message}', name: 'PaymentRepository', error: e);
+      developer.log(
+        'initiateDeposit API exception: ${e.message}',
+        name: 'PaymentRepository',
+        error: e,
+      );
       throw ServerFailure(e.message);
     } catch (e) {
-      developer.log('initiateDeposit error: $e', name: 'PaymentRepository', error: e);
+      developer.log(
+        'initiateDeposit error: $e',
+        name: 'PaymentRepository',
+        error: e,
+      );
       throw ServerFailure('Deposit initiation failed: $e');
     }
   }
@@ -187,7 +230,10 @@ class PaymentRepositoryImpl implements PaymentRepository {
 
     try {
       if (_client.network == Network.testnet) {
-        developer.log('Testnet detected: Instantly confirming deposit ($paymentId)', name: 'PaymentRepository');
+        developer.log(
+          'Testnet detected: Instantly confirming deposit ($paymentId)',
+          name: 'PaymentRepository',
+        );
         return true;
       }
 
@@ -199,35 +245,69 @@ class PaymentRepositoryImpl implements PaymentRepository {
         adminpwd: Env.adminPassword,
       );
 
-      developer.log('confirmDeposit response: $confirmResult', name: 'PaymentRepository');
+      developer.log(
+        'confirmDeposit response: $confirmResult',
+        name: 'PaymentRepository',
+      );
 
-      final isSuccess = confirmResult['result'] == true ||
-          confirmResult['result']?.toString().toLowerCase().contains('success') == true ||
+      final isSuccess =
+          confirmResult['result'] == true ||
+          confirmResult['result']?.toString().toLowerCase().contains(
+                'success',
+              ) ==
+              true ||
           confirmResult.toString().toLowerCase().contains('success');
 
-      developer.log('confirmDeposit success: $isSuccess', name: 'PaymentRepository');
+      developer.log(
+        'confirmDeposit success: $isSuccess',
+        name: 'PaymentRepository',
+      );
       return isSuccess;
     } catch (e) {
-      developer.log('confirmDeposit error: $e', name: 'PaymentRepository', error: e);
+      developer.log(
+        'confirmDeposit error: $e',
+        name: 'PaymentRepository',
+        error: e,
+      );
       throw ServerFailure('Confirmation failed: $e');
     }
   }
 
   @override
   Future<List<BankEntity>> getBanks({required String currency}) async {
-    developer.log('getBanks called: currency=$currency', name: 'PaymentRepository');
+    developer.log(
+      'getBanks called: currency=$currency',
+      name: 'PaymentRepository',
+    );
     try {
       if (currency.toUpperCase() == 'USD') {
         final usdList = await _client.payments.getBankListUSD();
-        developer.log('getBanks success: loaded ${usdList.length} USD banks', name: 'PaymentRepository');
-        return usdList.map((b) => BankEntity(code: b['code']?.toString() ?? '', name: b['name']?.toString() ?? '')).toList();
+        developer.log(
+          'getBanks success: loaded ${usdList.length} USD banks',
+          name: 'PaymentRepository',
+        );
+        return usdList
+            .map(
+              (b) => BankEntity(
+                code: b['code']?.toString() ?? '',
+                name: b['name']?.toString() ?? '',
+              ),
+            )
+            .toList();
       } else {
         final ngnList = await _client.payments.getBankListNGN();
-        developer.log('getBanks success: loaded ${ngnList.length} NGN banks', name: 'PaymentRepository');
-        return ngnList.map((b) => BankEntity(
-          code: b['code']?.toString() ?? b['bankCode']?.toString() ?? '',
-          name: b['name']?.toString() ?? b['bankName']?.toString() ?? '',
-        )).toList();
+        developer.log(
+          'getBanks success: loaded ${ngnList.length} NGN banks',
+          name: 'PaymentRepository',
+        );
+        return ngnList
+            .map(
+              (b) => BankEntity(
+                code: b['code']?.toString() ?? b['bankCode']?.toString() ?? '',
+                name: b['name']?.toString() ?? b['bankName']?.toString() ?? '',
+              ),
+            )
+            .toList();
       }
     } catch (e) {
       developer.log('getBanks error: $e', name: 'PaymentRepository', error: e);
@@ -240,7 +320,10 @@ class PaymentRepositoryImpl implements PaymentRepository {
     required String bankCode,
     required String accountNumber,
   }) async {
-    developer.log('verifyBankAccount called: bankCode=$bankCode, accountNumber=$accountNumber', name: 'PaymentRepository');
+    developer.log(
+      'verifyBankAccount called: bankCode=$bankCode, accountNumber=$accountNumber',
+      name: 'PaymentRepository',
+    );
     try {
       final response = await _client.payments.verifyBankAccountNameNGN(
         destinationInstitutionCode: bankCode,
@@ -248,17 +331,28 @@ class PaymentRepositoryImpl implements PaymentRepository {
         admin: Env.adminAddress,
         adminpwd: Env.adminPassword,
       );
-      final accountName = response['result']?['accountName']?.toString() ??
+      final accountName =
+          response['result']?['accountName']?.toString() ??
           response['result']?.toString() ??
           response['accountName']?.toString() ??
-          response['accountname']?.toString() ?? '';
-      developer.log('verifyBankAccount success: accountName=$accountName', name: 'PaymentRepository');
+          response['accountname']?.toString() ??
+          '';
+      developer.log(
+        'verifyBankAccount success: accountName=$accountName',
+        name: 'PaymentRepository',
+      );
       if (accountName.isEmpty) {
-        throw const ValidationFailure('Could not verify account name. Please check account details.');
+        throw const ValidationFailure(
+          'Could not verify account name. Please check account details.',
+        );
       }
       return accountName;
     } catch (e) {
-      developer.log('verifyBankAccount error: $e', name: 'PaymentRepository', error: e);
+      developer.log(
+        'verifyBankAccount error: $e',
+        name: 'PaymentRepository',
+        error: e,
+      );
       throw ServerFailure('Bank account verification failed: $e');
     }
   }
@@ -304,11 +398,22 @@ class PaymentRepositoryImpl implements PaymentRepository {
         admin: Env.adminAddress,
         adminpwd: Env.adminPassword,
       );
-      final txHash = response['result']?.toString() ?? response['txhash']?.toString() ?? response['txId']?.toString() ?? '';
-      developer.log('withdraw success: txHash=$txHash', name: 'PaymentRepository');
+      final txHash =
+          response['result']?.toString() ??
+          response['txhash']?.toString() ??
+          response['txId']?.toString() ??
+          '';
+      developer.log(
+        'withdraw success: txHash=$txHash',
+        name: 'PaymentRepository',
+      );
       return txHash;
     } on ValidationException catch (e) {
-      developer.log('withdraw validation error: ${e.message}', name: 'PaymentRepository', error: e);
+      developer.log(
+        'withdraw validation error: ${e.message}',
+        name: 'PaymentRepository',
+        error: e,
+      );
       throw ValidationFailure(e.message);
     } catch (e) {
       developer.log('withdraw error: $e', name: 'PaymentRepository', error: e);

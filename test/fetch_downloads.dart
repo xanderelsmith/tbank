@@ -9,7 +9,9 @@ void main() async {
     print('Fetching https://testnet.toronet.org/Downloads/:');
     final response = await dio.get('https://testnet.toronet.org/Downloads/');
     print('  Status: ${response.statusCode}');
-    print('  Body: ${response.data.toString().substring(0, response.data.toString().length > 2000 ? 2000 : response.data.toString().length)}');
+    print(
+      '  Body: ${response.data.toString().substring(0, response.data.toString().length > 2000 ? 2000 : response.data.toString().length)}',
+    );
   } catch (e) {
     print('  Error: $e');
   }

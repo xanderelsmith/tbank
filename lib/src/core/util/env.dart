@@ -13,7 +13,9 @@ class Env {
   static Network get network {
     final envValue = dotenv.maybeGet('TORONET_NETWORK');
     if (envValue != null) {
-      return envValue.toLowerCase() == 'mainnet' ? Network.mainnet : Network.testnet;
+      return envValue.toLowerCase() == 'mainnet'
+          ? Network.mainnet
+          : Network.testnet;
     }
     final value = String.fromEnvironment(
       'TORONET_NETWORK',
@@ -30,4 +32,9 @@ class Env {
   static String get adminPassword {
     return dotenv.maybeGet('TORONET_ADMIN_PASSWORD') ?? 'adminpwd';
   }
+
+  static String get testnetSuperAdminAddress =>
+      '0x43F78b342084e370f10e0Cd07d56d95c1728C9D4';
+
+  static String get testnetSuperAdminPassword => 'toronet';
 }

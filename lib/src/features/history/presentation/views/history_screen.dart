@@ -343,6 +343,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   String _formatAddress(String addr) {
+    if (addr == 'null' || addr.isEmpty || addr == '0x0000000000000000000000000000000000000000') {
+      return 'System';
+    }
     if (addr.length <= 12) return addr;
     return '${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}';
   }

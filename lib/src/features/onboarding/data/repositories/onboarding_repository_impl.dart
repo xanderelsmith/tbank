@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:toronet/toronet.dart';
 import '../../../../core/services/toronet_client.dart';
 import '../../../../core/error/exceptions.dart';
+import '../../../../core/util/crypto_util.dart';
 import '../../domain/entities/wallet_entity.dart';
 import '../../domain/repositories/onboarding_repository.dart';
 import '../datasources/onboarding_local_datasource.dart';
@@ -74,12 +75,70 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
       throw ValidationFailure(e.message);
     } on APIException catch (e) {
       log('importWallet APIException: ${e.message}', error: e);
+      if (e.message.contains('Duplicated keystore record found')) {
+        log('Keystore already exists on node. Resolving address locally.');
+        try {
+          final address = CryptoUtil.getAddressFromPrivateKey(privateKey);
+          return WalletEntity(
+            address: address,
+            username: username,
+            privateKey: privateKey,
+          );
+        } catch (innerErr) {
+          log('Failed to derive address locally: $innerErr', error: innerErr);
+          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
+        }
+      }
       throw ServerFailure(e.message);
+    } on ServerFailure catch (e) {
+      if (e.message.contains('Duplicated keystore record found')) {
+        log('Keystore already exists on node. Resolving address locally.');
+        try {
+          final address = CryptoUtil.getAddressFromPrivateKey(privateKey);
+          return WalletEntity(
+            address: address,
+            username: username,
+            privateKey: privateKey,
+          );
+        } catch (innerErr) {
+          log('Failed to derive address locally: $innerErr', error: innerErr);
+          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
+        }
+      }
+      rethrow;
     } on ToroSDKException catch (e) {
       log('importWallet ToroSDKException: ${e.message}', error: e);
+      if (e.message.contains('Duplicated keystore record found')) {
+        log('Keystore already exists on node. Resolving address locally.');
+        try {
+          final address = CryptoUtil.getAddressFromPrivateKey(privateKey);
+          return WalletEntity(
+            address: address,
+            username: username,
+            privateKey: privateKey,
+          );
+        } catch (innerErr) {
+          log('Failed to derive address locally: $innerErr', error: innerErr);
+          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
+        }
+      }
       throw ServerFailure(e.message);
     } catch (e) {
       log('importWallet unexpected error: $e', error: e);
+      if (e.toString().contains('Duplicated keystore record found')) {
+        log('Keystore already exists on node. Resolving address locally.');
+        try {
+          final address = CryptoUtil.getAddressFromPrivateKey(privateKey);
+          return WalletEntity(
+            address: address,
+            username: username,
+            privateKey: privateKey,
+          );
+        } catch (innerErr) {
+          log('Failed to derive address locally: $innerErr', error: innerErr);
+          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
+        }
+      }
       throw ServerFailure('An unexpected error occurred: $e');
     }
   }

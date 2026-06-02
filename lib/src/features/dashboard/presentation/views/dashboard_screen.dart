@@ -93,7 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset('assets/images/logo.png', height: 28),
+            SizedBox(height: 28, child: Image.asset('assets/images/logo.png')),
             const Text('ToroBank'),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

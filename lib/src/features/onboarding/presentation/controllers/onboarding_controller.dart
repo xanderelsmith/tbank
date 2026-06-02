@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:tbank/src/features/onboarding/data/repositories/onboarding_repository_impl.dart';
+import '../../../../core/util/crypto_util.dart';
 import '../../domain/entities/wallet_entity.dart';
 import '../../../../core/services/notification_service.dart';
 
@@ -71,7 +72,6 @@ class OnboardingController extends ChangeNotifier {
         password: password,
       );
 
-      // Save password and details in state wallet
       final savedWallet = WalletEntity(
         address: wallet.address,
         username: wallet.username,
@@ -93,8 +93,47 @@ class OnboardingController extends ChangeNotifier {
     }
   }
 
+  /// Generates a new seed phrase, derives private key, and registers via importWallet
+  Future<String?> createWalletWithSeed({
+    required String username,
+    required String pin,
+  }) async {
+    developer.log('createWalletWithSeed: username=$username', name: 'OnboardingController');
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      final mnemonic = CryptoUtil.generateMnemonic();
+      final privateKey = CryptoUtil.derivePrivateKey(mnemonic);
+      
+      final wallet = await _repository.importWallet(
+        privateKey: privateKey,
+        username: username,
+        password: pin, // User's PIN replaces password
+      );
+
+      final savedWallet = WalletEntity(
+        address: wallet.address,
+        username: wallet.username,
+        privateKey: wallet.privateKey,
+      );
+
+      await _repository.saveWallet(savedWallet);
+      _activeWallet = savedWallet;
+      developer.log('createWalletWithSeed success: address=${wallet.address}', name: 'OnboardingController');
+      _startNotificationService();
+      notifyListeners();
+      return mnemonic; // Return the 12-words to show the user
+    } catch (e) {
+      developer.log('createWalletWithSeed error: $e', name: 'OnboardingController', error: e);
+      _errorMessage = e.toString();
+      return null;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<bool> importWallet({
-    required String privateKey,
+    required String input, // Can be private key or mnemonic
     required String username,
     required String password,
   }) async {
@@ -102,6 +141,13 @@ class OnboardingController extends ChangeNotifier {
     _setLoading(true);
     _errorMessage = null;
     try {
+      String privateKey = input;
+      if (CryptoUtil.isValidMnemonic(input.trim())) {
+        privateKey = CryptoUtil.derivePrivateKey(input.trim());
+      } else if (!input.startsWith('0x') && input.length != 64 && input.length != 66) {
+         throw Exception('Invalid private key or seed phrase format');
+      }
+
       final wallet = await _repository.importWallet(
         privateKey: privateKey,
         username: username,

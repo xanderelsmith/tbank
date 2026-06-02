@@ -68,7 +68,7 @@ class _RequestPaymentScreenState extends State<RequestPaymentScreen> {
     }
     await Clipboard.setData(ClipboardData(text: link));
     if (mounted) {
-      InAppNotification.show(context, 'Payment link copied to clipboard!');
+      InAppNotification.show(context, 'Payment link copied to clipboard!', isError: false);
     }
   }
 

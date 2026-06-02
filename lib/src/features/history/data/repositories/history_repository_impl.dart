@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:toronet/toronet.dart';
 import '../../../../core/services/toronet_client.dart';
+import '../../../../core/services/apiurl.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/repositories/history_repository.dart';
@@ -23,14 +24,15 @@ class HistoryRepositoryImpl implements HistoryRepository {
       dio.httpClientAdapter = IOHttpClientAdapter(
         createHttpClient: () {
           final client = HttpClient();
-          client.badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+          client.badCertificateCallback =
+              (X509Certificate cert, String host, int port) => true;
           return client;
         },
       );
 
       final nodeUrl = _client.network == Network.testnet
-          ? 'https://testnet.toronet.org/api'
-          : 'https://api.toronet.org';
+          ? ApiUrl.testbaseUrl
+          : ApiUrl.mainnetBaseUrl;
 
       final url = '$nodeUrl/query';
       final response = await dio.get(
@@ -49,7 +51,9 @@ class HistoryRepositoryImpl implements HistoryRepository {
       );
 
       if (response.statusCode != 200) {
-        throw ServerFailure('Toronet node responded with status ${response.statusCode}');
+        throw ServerFailure(
+          'Toronet node responded with status ${response.statusCode}',
+        );
       }
 
       final dynamic rawData = response.data;
@@ -63,7 +67,9 @@ class HistoryRepositoryImpl implements HistoryRepository {
       }
 
       if (responseMap['result'] == false) {
-        throw ServerFailure(responseMap['error']?.toString() ?? 'Failed to query transactions');
+        throw ServerFailure(
+          responseMap['error']?.toString() ?? 'Failed to query transactions',
+        );
       }
 
       final dynamic dataList = responseMap['data'];
@@ -87,15 +93,19 @@ class HistoryRepositoryImpl implements HistoryRepository {
             final type = from.toLowerCase() == address.toLowerCase()
                 ? 'send'
                 : 'receive';
-            
-            final amount = tx['EV_Value']?.toString() ?? tx['EV_Value2']?.toString() ?? '0.00';
+
+            final amount =
+                tx['EV_Value']?.toString() ??
+                tx['EV_Value2']?.toString() ??
+                '0.00';
             final hash = tx['EV_Hash']?.toString() ?? '';
 
             final contract = tx['EV_Contract']?.toString().toLowerCase() ?? '';
             String currencyName = 'USD';
             if (contract.contains('naira') || contract.contains('ngn')) {
               currencyName = 'NGN';
-            } else if (contract.contains('dollar') || contract.contains('usd')) {
+            } else if (contract.contains('dollar') ||
+                contract.contains('usd')) {
               currencyName = 'USD';
             } else if (contract.contains('toro')) {
               currencyName = 'TOROG';
