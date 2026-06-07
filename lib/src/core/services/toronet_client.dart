@@ -4,33 +4,32 @@ import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:tbank/src/core/services/apiurl.dart';
 import 'package:toronet/toronet.dart';
-import 'package:toronet/src/tns/tns.dart';
-import '../util/env.dart';
 
 class ToronetClient {
   late ToronetSDK _sdk;
-  Network _network = Network.testnet;
 
-  ToronetClient() {
-    _network = Env.network;
+  ToronetClient({Network? asignedNetwork}) {
+    if (asignedNetwork != null) {
+      _networkdData = asignedNetwork;
+    }
     _sdk = ToronetSDK(
-      network: _network,
-      baseUrl: _network == Network.testnet ? ApiUrl.testbaseUrl : null,
-      customConnectWUrl: _network == Network.mainnet
-          ? 'https://restapi.connectw.com/api'
+      network: _networkdData,
+      //if Network is testnet return test net url
+      baseUrl: nodeUrl,
+      customConnectWUrl: _networkdData == Network.mainnet
+          ? ApiUrl.mainnetBaseUrl
           : ApiUrl.testbaseUrl,
-      dio: _createDio(),
     );
   }
-
+  Network _networkdData = Network.testnet;
   ToronetSDK get sdk => _sdk;
-  Network get network => _network;
-  String get nodeUrl => _network == Network.testnet
+  Network get getNetwork => _networkdData;
+  String get nodeUrl => getNetwork == Network.testnet
       ? ApiUrl.testbaseUrl
-      : 'https://api.toronet.org/';
+      : ApiUrl.mainnetBaseUrl;
 
   void switchNetwork(Network newNetwork) {
-    _network = newNetwork;
+    _networkdData = newNetwork;
     _sdk = ToronetSDK(
       network: newNetwork,
       baseUrl: newNetwork == Network.testnet ? ApiUrl.testbaseUrl : null,

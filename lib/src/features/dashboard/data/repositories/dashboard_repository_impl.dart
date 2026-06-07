@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:toronet/toronet.dart';
 import '../../../../core/services/toronet_client.dart';
 import '../../../../core/error/exceptions.dart';
@@ -14,6 +16,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
     try {
       // The getBalance endpoint returns all asset balances in a single JSON payload
       // e.g. {bal_toro: 150, bal_dollar: 14400, bal_naira: 1954000, ...}
+      log('Fetching balances for address: $address');
       final result = await _client.balance.getBalance(address: address);
 
       final List<TokenBalance> balances = [];
@@ -32,16 +35,18 @@ class DashboardRepositoryImpl implements DashboardRepository {
         'bal_espees': {'symbol': 'ESPEES', 'name': 'Toro Espees'},
         'bal_plast': {'symbol': 'PLAST', 'name': 'Toro Plast'},
       };
-
+      log('API response for balances: $result');
       for (var entry in currencyMap.entries) {
         final key = entry.key;
         final info = entry.value;
         if (result.containsKey(key)) {
-          balances.add(TokenBalance(
-            symbol: info['symbol']!,
-            name: info['name']!,
-            amount: result[key]?.toString() ?? '0',
-          ));
+          balances.add(
+            TokenBalance(
+              symbol: info['symbol']!,
+              name: info['name']!,
+              amount: result[key]?.toString() ?? '0',
+            ),
+          );
         }
       }
 

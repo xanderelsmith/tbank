@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:toronet/toronet.dart';
 
 // Core
 import 'src/core/constants/constants.dart';
@@ -68,7 +69,7 @@ void main() async {
   }
 
   // Initialize service client
-  final toronetClient = ToronetClient();
+  final toronetClient = ToronetClient(asignedNetwork: Network.testnet);
 
   final sharedPreferences = await SharedPreferences.getInstance();
 

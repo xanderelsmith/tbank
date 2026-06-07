@@ -30,7 +30,7 @@ class HistoryRepositoryImpl implements HistoryRepository {
         },
       );
 
-      final nodeUrl = _client.network == Network.testnet
+      final nodeUrl = _client.getNetwork == Network.testnet
           ? ApiUrl.testbaseUrl
           : ApiUrl.mainnetBaseUrl;
 

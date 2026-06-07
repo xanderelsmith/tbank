@@ -9,14 +9,19 @@ void main() {
     final client = ToronetClient();
     final adminAddr = Env.adminAddress;
 
-    print('Checking admin status for $adminAddr on network: ${client.network}');
+    print(
+      'Checking admin status for $adminAddr on network: ${client.getNetwork}',
+    );
     try {
       // Check using QueryService
       final roleResult = await client.query.getAddrRole(addr: adminAddr);
       print('Query getAddrRole result: $roleResult');
 
       // Check using RolesService if available
-      final hasRole = await client.roles.isRole(roleType: RoleType.admin, address: adminAddr);
+      final hasRole = await client.roles.isRole(
+        roleType: RoleType.admin,
+        address: adminAddr,
+      );
       print('RolesService.isRole(admin): $hasRole');
     } catch (e) {
       print('Error: $e');

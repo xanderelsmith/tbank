@@ -71,7 +71,7 @@ class TransferRepositoryImpl implements TransferRepository {
         },
       );
 
-      final nodeUrl = _client.network == Network.testnet
+      final nodeUrl = _client.getNetwork == Network.testnet
           ? ApiUrl.testbaseUrl
           : ApiUrl.mainnetBaseUrl;
 
@@ -81,7 +81,7 @@ class TransferRepositoryImpl implements TransferRepository {
       final String clientAddress;
       final String clientPassword;
 
-      if (_client.network == Network.testnet) {
+      if (_client.getNetwork == Network.testnet) {
         clientAddress = fromAddress;
         clientPassword = password;
 
@@ -175,10 +175,7 @@ class TransferRepositoryImpl implements TransferRepository {
         data: {
           'op': 'enrollcurrencyaccount',
           'params': [
-            {
-              'name': 'admin',
-              'value': Env.testnetSuperAdminAddress,
-            },
+            {'name': 'admin', 'value': Env.testnetSuperAdminAddress},
             {'name': 'adminpwd', 'value': Env.testnetSuperAdminPassword},
             {'name': 'addr', 'value': address},
           ],

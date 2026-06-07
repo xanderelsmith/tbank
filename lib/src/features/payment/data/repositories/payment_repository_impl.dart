@@ -18,7 +18,7 @@ class PaymentRepositoryImpl implements PaymentRepository {
   PaymentRepositoryImpl(this._client);
 
   @override
-  bool get isTestnet => _client.network == Network.testnet;
+  bool get isTestnet => _client.getNetwork == Network.testnet;
 
   @override
   Future<String> initiateDeposit({
@@ -27,14 +27,14 @@ class PaymentRepositoryImpl implements PaymentRepository {
     required String address,
   }) async {
     developer.log(
-      'initiateDeposit called: address=$address, amount=$amount, currency=$currency, network=${_client.network}',
+      'initiateDeposit called: address=$address, amount=$amount, currency=$currency, network=${_client.getNetwork}',
       name: 'PaymentRepository',
     );
 
     try {
       // If we are on testnet, simulate the fiat deposit by executing a real on-chain mint/import currency
       // using the testnet owner credentials. This allows instant funding during demos.
-      if (_client.network == Network.testnet) {
+      if (_client.getNetwork == Network.testnet) {
         final String url;
         final String operation;
         final Map<String, dynamic> requestData;
@@ -96,10 +96,7 @@ class PaymentRepositoryImpl implements PaymentRepository {
         requestData = {
           'op': operation,
           'params': [
-            {
-              'name': 'admin',
-              'value': Env.testnetSuperAdminAddress,
-            },
+            {'name': 'admin', 'value': Env.testnetSuperAdminAddress},
             {'name': 'adminpwd', 'value': Env.testnetSuperAdminPassword},
             {'name': 'addr', 'value': address},
             {'name': 'val', 'value': amount},
@@ -224,12 +221,12 @@ class PaymentRepositoryImpl implements PaymentRepository {
     required String amount,
   }) async {
     developer.log(
-      'confirmDeposit called: paymentId=$paymentId, amount=$amount, network=${_client.network}',
+      'confirmDeposit called: paymentId=$paymentId, amount=$amount, network=${_client.getNetwork}',
       name: 'PaymentRepository',
     );
 
     try {
-      if (_client.network == Network.testnet) {
+      if (_client.getNetwork == Network.testnet) {
         developer.log(
           'Testnet detected: Instantly confirming deposit ($paymentId)',
           name: 'PaymentRepository',

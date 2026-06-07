@@ -72,11 +72,12 @@ class PollingNotificationHandler {
           if (txList.isNotEmpty) {
             final latestTx = txList.first;
             final txHash = latestTx['EV_Hash']?.toString() ?? '';
-            final fromAddress = latestTx['EV_From']?.toString() ?? '';
+            final String? fromAddress = (latestTx['EV_From']);
 
             if (!_isFirstPollLoad && txHash != _lastSeenTxHash) {
               // Check if it is inbound transfer to active wallet
-              if (fromAddress.toLowerCase() != walletAddress.toLowerCase() &&
+              if (fromAddress?.toString().toLowerCase() !=
+                      walletAddress.toLowerCase() &&
                   latestTx['EV_To']?.toString().toLowerCase() ==
                       walletAddress.toLowerCase()) {
                 final val =
@@ -84,13 +85,20 @@ class PollingNotificationHandler {
                     latestTx['EV_Value2']?.toString() ??
                     '0.00';
 
+                final displayFrom =
+                    (fromAddress == null ||
+                        fromAddress.isEmpty ||
+                        fromAddress == 'null')
+                    ? 'System'
+                    : fromAddress;
+
                 controller.add(
                   BlockchainNotification(
                     title: 'Payment Received! 💰',
-                    body: 'Received $val USD from $fromAddress',
+                    body: 'Received $val USD from $displayFrom',
                     type: 'transfer',
                     metadata: {
-                      'from': fromAddress,
+                      'from': displayFrom,
                       'amount': val,
                       'txHash': txHash,
                     },
