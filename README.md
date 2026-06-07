@@ -31,10 +31,10 @@ ToroBank features a cohesive, premium UI designed to capture user engagement at 
 ## 🚀 Quick File Navigation (Click to open in your IDE)
 Use the links below to jump straight to the source code for key features:
 *   [📱 Virtual Wallet Screen (`virtual_wallet_screen.dart`)](lib/src/features/virtual_wallet/presentation/views/virtual_wallet_screen.dart)
-*   📊 Dashboard Controller (`dashboard_controller.dart`)
-*   💸 Transfer Repository (`transfer_repository_impl.dart`)
-*   🏦 Payment Repository (`payment_repository_impl.dart`)
-*   🌉 Bridge Repository (`bridge_repository_impl.dart`)
+*   [📊 Dashboard Controller (`dashboard_controller.dart`)](lib/src/features/dashboard/presentation/controllers/dashboard_controller.dart)
+*   [💸 Transfer Repository (`transfer_repository_impl.dart`)](lib/src/features/transfer/data/repositories/transfer_repository_impl.dart)
+*   [🏦 Payment Repository (`payment_repository_impl.dart`)](lib/src/features/payment/data/repositories/payment_repository_impl.dart)
+*   [🌉 Bridge Repository (`bridge_repository_impl.dart`)](lib/src/features/bridge/data/repositories/bridge_repository_impl.dart)
 
 ---
 
