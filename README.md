@@ -40,6 +40,8 @@ Use the links below to jump straight to the source code for key features:
 
 ## 🏗️ Architecture: Feature-First Clean Architecture
 
+**Why we chose this architecture:** Building a Web3 wallet requires maximum security and predictability. By decoupling the app into specific features (rather than grouping by file type), developers can easily locate, test, and isolate bugs within a single domain (e.g., transfers) without risking side-effects in other domains (e.g., bridging).
+
 The project is structured around features, making the codebase highly modular, testable, and scale-friendly. Each feature is decoupled into three layers:
 
 ```text
@@ -191,6 +193,11 @@ Following secure development principles, sensitive node details are passed as co
     ```bash
     flutter run --dart-define=TORONET_NETWORK=testnet --dart-define=TORONET_ADMIN_ADDRESS=0x...
     ```
+
+### 🚨 Troubleshooting Common Issues
+- **`MissingPluginException` or missing packages:** Ensure you have run `flutter pub get` after cloning the repository.
+- **Node Connection Failures:** Double-check your `config.json` file. Ensure `TORONET_NETWORK` is set properly (e.g., `testnet`) and that your device has internet access to reach the Toronet API endpoints.
+- **Deep Link Not Triggering:** If testing on Android emulators, ensure you are testing the deep link via ADB: `adb shell am start -W -a android.intent.action.VIEW -d "torobank://sign-tx?... "`
 
 ---
 
