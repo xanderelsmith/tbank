@@ -1,6 +1,9 @@
 # 🟢 ToroBank — Toronet Flutter Starter Template
 
-![TBank Preview](toroforge_converted_1780191321764_converted_1780846167409.gif)
+<p align="center">
+  <img src="./toroforge.gif" alt="TBank Preview" width="300"/>
+</p>
+
 
 ToroBank is a premium reference application built for Flutter developers to jumpstart their Web3 integration on the **Toronet Blockchain**. Leveraging a robust **Feature-First Clean Architecture**, state management via **Provider**, and a modern obsidian dark glassmorphism design themed with emerald gradients, this template serves as a production-grade template demonstrating real-world fintech patterns on Toronet.
 
