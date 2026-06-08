@@ -107,8 +107,18 @@ class TransferRepositoryImpl implements TransferRepository {
 
       // [DIO used]
       // dio was used here because the official Toronet SDK's transferCurrency
-      // method is currently broken on the testnet (returning 404 Not Found due to node maintenance).
+      // method is currently broken on the testnet (returning 404 ).
+
       // This raw dio.post bypasses the broken SDK wrapper and hits the node API directly to ensure transfers succeed.
+      // replace with this if you want to use the main net
+      //   final result = await _client.currency.transferCurrency(
+      //   currency: currencyEnum,
+      //   from: fromAddress,
+      //   to: toAddress,
+      //   amount: amount,
+      //   fromPassword: password,
+      // );
+
       final response = await dio.post(
         url,
         data: {
