@@ -4,6 +4,7 @@ import 'package:toronet/toronet.dart';
 import '../../../../core/services/toronet_client.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/util/crypto_util.dart';
+import '../../../../core/util/env.dart';
 import '../../domain/entities/wallet_entity.dart';
 import '../../domain/repositories/onboarding_repository.dart';
 import '../datasources/onboarding_local_datasource.dart';
@@ -31,6 +32,23 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
         username: username,
         password: password,
       );
+
+      // --- NEW: Register the name globally on TNS ---
+      log('Registering $username on TNS global registry...');
+      try {
+        await _client.tns.adminSetName(
+          admin: Env.testnetSuperAdminAddress,
+          adminPassword: Env.testnetSuperAdminPassword,
+          address: wallet.address,
+          name: username,
+        );
+        log('Successfully registered $username to ${wallet.address} on TNS!');
+      } catch (e) {
+        log('Warning: Failed to register $username on TNS: $e');
+        // We don't throw here because the local wallet was still successfully created.
+      }
+      // ----------------------------------------------
+
       log('createWallet request succeeded: address=${wallet.address}, username=${wallet.tnsName}');
       return WalletEntity(
         address: wallet.address,
