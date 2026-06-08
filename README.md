@@ -166,6 +166,8 @@ if (await canLaunchUrl(uri)) {
 ```
 Upon success, ToroBank redirects to: `mydapp://success?status=success&txHash=0x...`
 
+
+
 ---
 
 ## 🛠️ Configuration & Getting Started
@@ -216,3 +218,8 @@ flutter analyze
 ## 🤝 Community & Support
 - **Toronet Docs:** [Toronet Developer Guide](https://toroforges-organization.gitbook.io/toroforge-collective/)
 - **Discord Community:** Join the conversation on [Discord](https://discord.gg/45SMNdGx5d)
+
+
+### 7. How to Self Fund Wallet
+
+![Self Fund APp](fund.gif)
