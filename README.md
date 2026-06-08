@@ -221,5 +221,4 @@ flutter analyze
 
 
 ### 7. How to Self Fund Wallet
-
-![Self Fund APp](fund.gif)
+![Self Fund](fund.gif)
