@@ -95,97 +95,35 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     required String password,
   }) async {
     log('importWallet request started for username: $username');
+    String finalAddress;
     try {
       final wallet = await _client.wallet.importWalletFromPrivateKey(
         privateKey: privateKey,
         password: password,
       );
-      log('importWallet request succeeded: address=${wallet.address}');
-
-      return WalletEntity(
-        address: wallet.address,
-        username: username,
-        privateKey: privateKey,
-      );
-    } on ValidationException catch (e) {
-      log('importWallet ValidationException: ${e.message}', error: e);
-      throw ValidationFailure(e.message);
-    } on APIException catch (e) {
-      log('importWallet APIException: ${e.message}', error: e);
-      if (e.message.contains('Duplicated keystore record found')) {
-        log('Keystore already exists on node. Resolving address locally.');
-        try {
-          final address = CryptoUtil.getAddressFromPrivateKey(privateKey);
-          return WalletEntity(
-            address: address,
-            username: username,
-            privateKey: privateKey,
-          );
-        } catch (innerErr) {
-          log('Failed to derive address locally: $innerErr', error: innerErr);
-          throw ServerFailure(
-            'Duplicated keystore record found, but failed to derive address locally.',
-          );
-        }
-      }
-      throw ServerFailure(e.message);
-    } on ServerFailure catch (e) {
-      if (e.message.contains('Duplicated keystore record found')) {
-        log('Keystore already exists on node. Resolving address locally.');
-        try {
-          final address = CryptoUtil.getAddressFromPrivateKey(privateKey);
-          return WalletEntity(
-            address: address,
-            username: username,
-            privateKey: privateKey,
-          );
-        } catch (innerErr) {
-          log('Failed to derive address locally: $innerErr', error: innerErr);
-          throw ServerFailure(
-            'Duplicated keystore record found, but failed to derive address locally.',
-          );
-        }
-      }
-      rethrow;
-    } on ToroSDKException catch (e) {
-      log('importWallet ToroSDKException: ${e.message}', error: e);
-      if (e.message.contains('Duplicated keystore record found')) {
-        log('Keystore already exists on node. Resolving address locally.');
-        try {
-          final address = CryptoUtil.getAddressFromPrivateKey(privateKey);
-          return WalletEntity(
-            address: address,
-            username: username,
-            privateKey: privateKey,
-          );
-        } catch (innerErr) {
-          log('Failed to derive address locally: $innerErr', error: innerErr);
-          throw ServerFailure(
-            'Duplicated keystore record found, but failed to derive address locally.',
-          );
-        }
-      }
-      throw ServerFailure(e.message);
+      finalAddress = wallet.address;
+      log('importWallet request succeeded: address=$finalAddress');
     } catch (e) {
-      log('importWallet unexpected error: $e', error: e);
       if (e.toString().contains('Duplicated keystore record found')) {
         log('Keystore already exists on node. Resolving address locally.');
         try {
-          final address = CryptoUtil.getAddressFromPrivateKey(privateKey);
-          return WalletEntity(
-            address: address,
-            username: username,
-            privateKey: privateKey,
-          );
+          finalAddress = CryptoUtil.getAddressFromPrivateKey(privateKey);
         } catch (innerErr) {
           log('Failed to derive address locally: $innerErr', error: innerErr);
-          throw ServerFailure(
-            'Duplicated keystore record found, but failed to derive address locally.',
-          );
+          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
         }
+      } else {
+        log('importWallet unexpected error: $e', error: e);
+        throw ServerFailure('An unexpected error occurred: $e');
       }
-      throw ServerFailure('An unexpected error occurred: $e');
     }
+
+    final resolvedUsername = await _resolveOrRegisterTns(finalAddress, username);
+    return WalletEntity(
+      address: finalAddress,
+      username: resolvedUsername,
+      privateKey: privateKey,
+    );
   }
 
   @override
@@ -256,5 +194,38 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
   @override
   Future<void> deleteWallet() {
     return _localDataSource.deleteWallet();
+  }
+  Future<String> _resolveOrRegisterTns(String address, String fallbackUsername) async {
+    log('==================================================', name: 'TNS_IMPORT');
+    log('Checking TNS registry for existing username for address: $address', name: 'TNS_IMPORT');
+    try {
+      final res = await _client.tns.getName(address: address);
+      final existingName = res['name']?.toString() ?? res['result']?.toString() ?? '';
+      
+      // If we found a valid 4+ letter name on the blockchain, RESTORE IT!
+      if (existingName.isNotEmpty && existingName != 'null' && existingName.length >= 4 && !existingName.contains(' ')) {
+        log('SUCCESS: Restored existing blockchain username: $existingName', name: 'TNS_IMPORT');
+        log('==================================================', name: 'TNS_IMPORT');
+        return existingName;
+      }
+    } catch (e) {
+      log('No existing username found or error fetching: $e', name: 'TNS_IMPORT');
+    }
+
+    // If no existing name, register the one they typed in the UI
+    log('Attempting to register new username $fallbackUsername on TNS...', name: 'TNS_IMPORT');
+    try {
+      await _client.tns.adminSetName(
+        admin: Env.testnetSuperAdminAddress,
+        adminPassword: Env.testnetSuperAdminPassword,
+        address: address,
+        name: fallbackUsername,
+      );
+      log('SUCCESS: $fallbackUsername is now officially registered!', name: 'TNS_IMPORT');
+    } catch (e) {
+      log('FAILED: Registration failed for $fallbackUsername. Error: $e', name: 'TNS_IMPORT');
+    }
+    log('==================================================', name: 'TNS_IMPORT');
+    return fallbackUsername;
   }
 }
