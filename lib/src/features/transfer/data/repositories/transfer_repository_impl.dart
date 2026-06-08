@@ -15,11 +15,20 @@ class TransferRepositoryImpl implements TransferRepository {
 
   TransferRepositoryImpl(this._client);
 
+  ///
   @override
   Future<String> resolveTNS(String username) async {
     try {
       // Clean up username (TNS name should not have spaces or @ symbols)
       final cleanUsername = username.replaceAll('@', '').trim();
+      // recommended- use address resolution instead of name resolution for better reliability.
+
+      // I noticed the tns.getaddress method fails in testnet sometimes, but works fine
+      // in mainnet. This is likely due to testnet node maintenance or instability. To
+      // prevent this from blocking development and testing, we can catch and log any
+      // exceptions here and return a user-friendly error message instead of crashing
+      // the app. but if it doesnt fail, it will return the resolved address as
+      // expected. cheers.
       final response = await _client.tns.getAddress(name: cleanUsername);
       final address =
           response['address']?.toString() ??
@@ -103,9 +112,9 @@ class TransferRepositoryImpl implements TransferRepository {
         name: 'TransferRepository',
       );
 
-      // [DIO used] 
-      // dio was used here because the official Toronet SDK's transferCurrency 
-      // method is currently broken on the testnet (returning 404 Not Found due to node maintenance). 
+      // [DIO used]
+      // dio was used here because the official Toronet SDK's transferCurrency
+      // method is currently broken on the testnet (returning 404 Not Found due to node maintenance).
       // This raw dio.post bypasses the broken SDK wrapper and hits the node API directly to ensure transfers succeed.
       final response = await dio.post(
         url,
