@@ -21,14 +21,7 @@ class TransferRepositoryImpl implements TransferRepository {
     try {
       // Clean up username (TNS name should not have spaces or @ symbols)
       final cleanUsername = username.replaceAll('@', '').trim();
-      // recommended- use address resolution instead of name resolution for better reliability.
 
-      // I noticed the tns.getaddress method fails in testnet sometimes, but works fine
-      // in mainnet. This is likely due to testnet node maintenance or instability. To
-      // prevent this from blocking development and testing, we can catch and log any
-      // exceptions here and return a user-friendly error message instead of crashing
-      // the app. but if it doesnt fail, it will return the resolved address as
-      // expected. cheers.
       final response = await _client.tns.getAddress(name: cleanUsername);
       final address =
           response['address']?.toString() ??
