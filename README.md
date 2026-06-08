@@ -21,6 +21,7 @@ ToroBank is a premium reference application built for Flutter developers to jump
 
 ### How to Self Fund Wallet
 ![Self Fund](fund.gif)
+
 ---
 
 ## 🎨 Design System & Aesthetics
