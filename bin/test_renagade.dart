@@ -1,0 +1,1 @@
+import 'package:toronet/toronet.dart'; void main() async { final sdk = ToronetSDK(network: Network.testnet, baseUrl: 'https://testnet.toronet.org/api'); try { final res = await sdk.tnsService.getAddress(name: 'renagade'); print('RENAGADE RESOLVED: ' + res.toString()); } catch(e) { print('RENAGADE ERROR: ' + e.toString()); } }

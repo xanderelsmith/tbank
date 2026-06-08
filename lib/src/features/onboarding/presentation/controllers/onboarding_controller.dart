@@ -17,7 +17,10 @@ class OnboardingController extends ChangeNotifier {
   NotificationService? get notificationService => _notificationService;
 
   OnboardingController(this._repository) {
-    developer.log('Initializing OnboardingController...', name: 'OnboardingController');
+    developer.log(
+      'Initializing OnboardingController...',
+      name: 'OnboardingController',
+    );
     _loadSavedWallet();
   }
 
@@ -32,10 +35,17 @@ class OnboardingController extends ChangeNotifier {
     _setLoading(true);
     try {
       _activeWallet = await _repository.getSavedWallet();
-      developer.log('Loaded saved wallet: activeWallet=${_activeWallet?.address}', name: 'OnboardingController');
+      developer.log(
+        'Loaded saved wallet: activeWallet=${_activeWallet?.address}',
+        name: 'OnboardingController',
+      );
       _startNotificationService();
     } catch (e) {
-      developer.log('Error loading saved wallet: $e', name: 'OnboardingController', error: e);
+      developer.log(
+        'Error loading saved wallet: $e',
+        name: 'OnboardingController',
+        error: e,
+      );
       _errorMessage = e.toString();
     } finally {
       _setLoading(false);
@@ -48,12 +58,22 @@ class OnboardingController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    developer.log('Checking TNS availability for: $username', name: 'OnboardingController');
+    developer.log(
+      'Checking TNS availability for: $username',
+      name: 'OnboardingController',
+    );
     try {
       _isTnsAvailable = await _repository.isTNSAvailable(username: username);
-      developer.log('TNS availability result for $username: $_isTnsAvailable', name: 'OnboardingController');
+      developer.log(
+        'TNS availability result for $username: $_isTnsAvailable',
+        name: 'OnboardingController',
+      );
     } catch (e) {
-      developer.log('TNS check error: $e', name: 'OnboardingController', error: e);
+      developer.log(
+        'TNS check error: $e',
+        name: 'OnboardingController',
+        error: e,
+      );
       _isTnsAvailable = false;
     }
     notifyListeners();
@@ -63,7 +83,10 @@ class OnboardingController extends ChangeNotifier {
     required String username,
     required String password,
   }) async {
-    developer.log('createWallet: username=$username', name: 'OnboardingController');
+    developer.log(
+      'createWallet: username=$username',
+      name: 'OnboardingController',
+    );
     _setLoading(true);
     _errorMessage = null;
     try {
@@ -80,12 +103,19 @@ class OnboardingController extends ChangeNotifier {
 
       await _repository.saveWallet(savedWallet);
       _activeWallet = savedWallet;
-      developer.log('createWallet success: address=${wallet.address}', name: 'OnboardingController');
+      developer.log(
+        'createWallet success: address=${wallet.address}',
+        name: 'OnboardingController',
+      );
       _startNotificationService();
       notifyListeners();
       return true;
     } catch (e) {
-      developer.log('createWallet error: $e', name: 'OnboardingController', error: e);
+      developer.log(
+        'createWallet error: $e',
+        name: 'OnboardingController',
+        error: e,
+      );
       _errorMessage = e.toString();
       return false;
     } finally {
@@ -98,13 +128,16 @@ class OnboardingController extends ChangeNotifier {
     required String username,
     required String pin,
   }) async {
-    developer.log('createWalletWithSeed: username=$username', name: 'OnboardingController');
+    developer.log(
+      'createWalletWithSeed: username=$username',
+      name: 'OnboardingController',
+    );
     _setLoading(true);
     _errorMessage = null;
     try {
       final mnemonic = CryptoUtil.generateMnemonic();
       final privateKey = CryptoUtil.derivePrivateKey(mnemonic);
-      
+
       final wallet = await _repository.importWallet(
         privateKey: privateKey,
         username: username,
@@ -119,12 +152,19 @@ class OnboardingController extends ChangeNotifier {
 
       await _repository.saveWallet(savedWallet);
       _activeWallet = savedWallet;
-      developer.log('createWalletWithSeed success: address=${wallet.address}', name: 'OnboardingController');
+      developer.log(
+        'createWalletWithSeed success: address=${wallet.address}',
+        name: 'OnboardingController',
+      );
       _startNotificationService();
       notifyListeners();
       return mnemonic; // Return the 12-words to show the user
     } catch (e) {
-      developer.log('createWalletWithSeed error: $e', name: 'OnboardingController', error: e);
+      developer.log(
+        'createWalletWithSeed error: $e',
+        name: 'OnboardingController',
+        error: e,
+      );
       _errorMessage = e.toString();
       return null;
     } finally {
@@ -137,15 +177,20 @@ class OnboardingController extends ChangeNotifier {
     required String username,
     required String password,
   }) async {
-    developer.log('importWallet: username=$username', name: 'OnboardingController');
+    developer.log(
+      'importWallet: username=$username',
+      name: 'OnboardingController',
+    );
     _setLoading(true);
     _errorMessage = null;
     try {
       String privateKey = input;
       if (CryptoUtil.isValidMnemonic(input.trim())) {
         privateKey = CryptoUtil.derivePrivateKey(input.trim());
-      } else if (!input.startsWith('0x') && input.length != 64 && input.length != 66) {
-         throw Exception('Invalid private key or seed phrase format');
+      } else if (!input.startsWith('0x') &&
+          input.length != 64 &&
+          input.length != 66) {
+        throw Exception('Invalid private key or seed phrase format');
       }
 
       final wallet = await _repository.importWallet(
@@ -156,12 +201,19 @@ class OnboardingController extends ChangeNotifier {
 
       await _repository.saveWallet(wallet);
       _activeWallet = wallet;
-      developer.log('importWallet success: address=${wallet.address}', name: 'OnboardingController');
+      developer.log(
+        'importWallet success: address=${wallet.address}',
+        name: 'OnboardingController',
+      );
       _startNotificationService();
       notifyListeners();
       return true;
     } catch (e) {
-      developer.log('importWallet error: $e', name: 'OnboardingController', error: e);
+      developer.log(
+        'importWallet error: $e',
+        name: 'OnboardingController',
+        error: e,
+      );
       _errorMessage = e.toString();
       return false;
     } finally {
@@ -170,7 +222,10 @@ class OnboardingController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    developer.log('logout active wallet: ${_activeWallet?.address}', name: 'OnboardingController');
+    developer.log(
+      'logout active wallet: ${_activeWallet?.address}',
+      name: 'OnboardingController',
+    );
     _setLoading(true);
     _stopNotificationService();
     try {
@@ -202,7 +257,10 @@ class OnboardingController extends ChangeNotifier {
     _stopNotificationService();
     final wallet = _activeWallet;
     if (wallet != null) {
-      developer.log('Starting NotificationService for address: ${wallet.address}', name: 'OnboardingController');
+      developer.log(
+        'Starting NotificationService for address: ${wallet.address}',
+        name: 'OnboardingController',
+      );
       _notificationService = NotificationService(
         nodeUrl: _repository.client.nodeUrl,
         walletAddress: wallet.address,
@@ -213,7 +271,10 @@ class OnboardingController extends ChangeNotifier {
 
   void _stopNotificationService() {
     if (_notificationService != null) {
-      developer.log('Stopping NotificationService...', name: 'OnboardingController');
+      developer.log(
+        'Stopping NotificationService...',
+        name: 'OnboardingController',
+      );
       _notificationService!.stop();
       _notificationService = null;
     }

@@ -34,7 +34,14 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
       );
 
       // --- NEW: Register the name globally on TNS ---
-      log('Registering $username on TNS global registry...');
+      log(
+        '==================================================',
+        name: 'TNS_REGISTER',
+      );
+      log(
+        'Attempting to register $username on TNS global registry...',
+        name: 'TNS_REGISTER',
+      );
       try {
         await _client.tns.adminSetName(
           admin: Env.testnetSuperAdminAddress,
@@ -42,14 +49,26 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
           address: wallet.address,
           name: username,
         );
-        log('Successfully registered $username to ${wallet.address} on TNS!');
+        log(
+          'SUCCESS: $username is now officially registered on the blockchain!',
+          name: 'TNS_REGISTER',
+        );
       } catch (e) {
-        log('Warning: Failed to register $username on TNS: $e');
+        log(
+          'FAILED: TNS Registration failed for $username. Error: $e',
+          name: 'TNS_REGISTER',
+        );
         // We don't throw here because the local wallet was still successfully created.
       }
+      log(
+        '==================================================',
+        name: 'TNS_REGISTER',
+      );
       // ----------------------------------------------
 
-      log('createWallet request succeeded: address=${wallet.address}, username=${wallet.tnsName}');
+      log(
+        'createWallet request succeeded: address=${wallet.address}, username=${wallet.tnsName}',
+      );
       return WalletEntity(
         address: wallet.address,
         username: wallet.tnsName ?? username,
@@ -104,7 +123,9 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
           );
         } catch (innerErr) {
           log('Failed to derive address locally: $innerErr', error: innerErr);
-          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
+          throw ServerFailure(
+            'Duplicated keystore record found, but failed to derive address locally.',
+          );
         }
       }
       throw ServerFailure(e.message);
@@ -120,7 +141,9 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
           );
         } catch (innerErr) {
           log('Failed to derive address locally: $innerErr', error: innerErr);
-          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
+          throw ServerFailure(
+            'Duplicated keystore record found, but failed to derive address locally.',
+          );
         }
       }
       rethrow;
@@ -137,7 +160,9 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
           );
         } catch (innerErr) {
           log('Failed to derive address locally: $innerErr', error: innerErr);
-          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
+          throw ServerFailure(
+            'Duplicated keystore record found, but failed to derive address locally.',
+          );
         }
       }
       throw ServerFailure(e.message);
@@ -154,7 +179,9 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
           );
         } catch (innerErr) {
           log('Failed to derive address locally: $innerErr', error: innerErr);
-          throw ServerFailure('Duplicated keystore record found, but failed to derive address locally.');
+          throw ServerFailure(
+            'Duplicated keystore record found, but failed to derive address locally.',
+          );
         }
       }
       throw ServerFailure('An unexpected error occurred: $e');
