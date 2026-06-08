@@ -49,3 +49,5 @@ walkthrough_tutorial_guide.md
 content.md
 tbank_bounty_application.md
 walkthrough_tutorial_guide.md
+# Environment Variables
+.env

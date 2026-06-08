@@ -104,9 +104,18 @@ class HistoryRepositoryImpl implements HistoryRepository {
             String currencyName = 'USD';
             if (contract.contains('naira') || contract.contains('ngn')) {
               currencyName = 'NGN';
-            } else if (contract.contains('dollar') ||
-                contract.contains('usd')) {
+            } else if (contract.contains('dollar') || contract.contains('usd')) {
               currencyName = 'USD';
+            } else if (contract.contains('pound') || contract.contains('gbp')) {
+              currencyName = 'GBP';
+            } else if (contract.contains('euro') || contract.contains('eur')) {
+              currencyName = 'EUR';
+            } else if (contract.contains('egp')) {
+              currencyName = 'EGP';
+            } else if (contract.contains('ksh')) {
+              currencyName = 'KSH';
+            } else if (contract.contains('zar')) {
+              currencyName = 'ZAR';
             } else if (contract.contains('toro')) {
               currencyName = 'TOROG';
             }

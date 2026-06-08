@@ -46,20 +46,23 @@ class TransferRepositoryImpl implements TransferRepository {
     required String password,
   }) async {
     try {
-      final String currencyStr;
+      final Currency currencyEnum;
       switch (currency.toUpperCase()) {
         case 'USD':
-          currencyStr = 'dollar';
+          currencyEnum = Currency.dollar;
           break;
         case 'NGN':
-          currencyStr = 'naira';
+          currencyEnum = Currency.naira;
           break;
         case 'TOROG':
-          currencyStr = 'toro';
+        case 'TORO':
+          currencyEnum = Currency.toro;
           break;
         default:
-          currencyStr = 'toro';
+          currencyEnum = Currency.dollar;
       }
+
+      final String currencyStr = currencyEnum.name;
 
       final dio = Dio();
       dio.httpClientAdapter = IOHttpClientAdapter(
@@ -75,6 +78,12 @@ class TransferRepositoryImpl implements TransferRepository {
           ? ApiUrl.testbaseUrl
           : ApiUrl.mainnetBaseUrl;
 
+      if (_client.getNetwork == Network.testnet) {
+        // Auto-enroll both sender and recipient addresses on testnet
+        await _ensureEnrolled(dio, nodeUrl, currencyStr, fromAddress);
+        await _ensureEnrolled(dio, nodeUrl, currencyStr, toAddress);
+      }
+
       final pathPrefix = (currencyStr == 'toro') ? 'token' : 'currency';
       final url = '$nodeUrl/$pathPrefix/$currencyStr/cl';
 
@@ -84,20 +93,20 @@ class TransferRepositoryImpl implements TransferRepository {
       if (_client.getNetwork == Network.testnet) {
         clientAddress = fromAddress;
         clientPassword = password;
-
-        // Auto-enroll both sender and recipient addresses on testnet
-        await _ensureEnrolled(dio, nodeUrl, currencyStr, fromAddress);
-        await _ensureEnrolled(dio, nodeUrl, currencyStr, toAddress);
       } else {
         clientAddress = Env.adminAddress;
         clientPassword = Env.adminPassword;
       }
 
       developer.log(
-        'Executing transfer: url=$url, client=$clientAddress, from=$fromAddress, to=$toAddress, amount=$amount, currency=$currency',
+        'Executing raw dio transfer: url=$url, from=$fromAddress, to=$toAddress, amount=$amount, currencyEnum=${currencyEnum.name}',
         name: 'TransferRepository',
       );
 
+      // [DIO used] 
+      // dio was used here because the official Toronet SDK's transferCurrency 
+      // method is currently broken on the testnet (returning 404 Not Found due to node maintenance). 
+      // This raw dio.post bypasses the broken SDK wrapper and hits the node API directly to ensure transfers succeed.
       final response = await dio.post(
         url,
         data: {
